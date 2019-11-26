@@ -3,26 +3,21 @@
 :Output: VCF and HTML files
 
 Usage
-~~~~~~~~~
+~~~~~
 
-Command line interface
-#########################
+::
 
-Example::
+    sequana_pipelines_variant_calling --help
+    sequana_pipelines_variant_calling --input-directory DATAPATH --run-mode local --reference measles.fa
+    sequana_pipelines_variant_calling --input-directory DATAPATH --run-mode slurm --reference measles.fa
 
-    sequana --pipeline variant_calling \
-            --input-directory data/ \
-            --input-readtag _[12].fastq \
-            --extention fastq.gz \
-            --reference reference.fasta \
-            --working-dir analysis
-    cd analysis
+    cd variant_calling
     snakemake -s variant_calling.rules --stats stats.txt
 
 Requirements
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
-.. include:: ../sequana/pipelines/variant_calling/requirements.txt
+
 
 
 .. image:: https://raw.githubusercontent.com/sequana/sequana/master/sequana/pipelines/variant_calling/variant_calling_dag.png
@@ -66,55 +61,33 @@ configuration file. Here are the rules and their developer and user documentatio
 Mapping
 #########
 
-Add locus in fasta
-^^^^^^^^^^^^^^^^^^^^^
-.. snakemakerule:: snpeff_add_locus_in_fasta
+This pipeline uses the following rule from Sequana to perform the mapping and
+marking duplicates.
 
-BWA
-^^^^
-.. snakemakerule:: bwa_mem_dynamic
-
-Sambamba markdup
-^^^^^^^^^^^^^^^^^^
-.. snakemakerule:: sambamba_markdup
-
-Sambamba filter
-^^^^^^^^^^^^^^^^^^
-.. snakemakerule:: sambamba_filter
+- snpeff_add_locus_in_fasta
+- bwa_mem_dynamic
+- sambamba_markdup
+- sambamba_filter
 
 Variant Calling
 ###################
 
-Freebayes
-^^^^^^^^^^
-.. snakemakerule:: freebayes
+The variant calling itself depends on those rules:
 
-Freebayes filter
-^^^^^^^^^^^^^^^^^^
-.. snakemakerule:: freebayes_vcf_filter
+- freebayes
+- freebayes_vcf_filter
 
 Joint variants calling
 #########################
 
-Joint Freebayes
-^^^^^^^^^^^^^^^^^
-.. snakemakerule:: joint_freebayes
-
-Joint Freebayes filter
-^^^^^^^^^^^^^^^^^^^^^^^^
-.. snakemakerule:: joint_freebayes_vcf_filter
+- joint_freebayes
+- joint_freebayes_vcf_filter
 
 Annotation
 ####################
-.. snakemakerule:: snpeff
+- snpeff
 
 Coverage analysis
 ###################
-
-Samtools depth
-^^^^^^^^^^^^^^^^
-.. snakemakerule:: samtools_depth
-
-Sequana coverage
-^^^^^^^^^^^^^^^^^^^
-.. snakemakerule:: sequana_coverage
+- samtools_depth
+- sequana_coverage
