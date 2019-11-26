@@ -51,14 +51,8 @@ class Options(argparse.ArgumentParser):
 
         pipeline_group = self.add_argument_group("pipeline")
         pipeline_group.add_argument(
-            "--output-directory",
-            dest="outdir",
-            default="fastqc",
-            help="Where to save the FASTQC results (default fastqc/ )",
-        )
-        pipeline_group.add_argument(
-            "--fastq-directory",
-            dest="fastq_directory",
+            "--input-directory",
+            dest="input_directory",
             default=".",
             required=True,
             help="Where to find the FastQ files (default current directory . ) ",
@@ -69,9 +63,20 @@ class Options(argparse.ArgumentParser):
             default="*fastq.gz",
             help="pattern for the input FastQ files (default  *fastq.gz)",
         )
+        pipeline_group.add_argument(
+            "--reference",
+            dest="reference",
+            required=True,
+            help="The input reference to mapped reads onto"
+        )
+        pipeline_group.add_argument(
+            "--annotation",
+            dest="annotation",
+            default=None,
+            help="The annotation for snpeff"
+        )
         pipeline_group.add_argument("--threads", dest="threads", default=4, type=int)
 
-        
 
 def main(args=None):
     NAME = "variant_calling"
@@ -87,9 +92,18 @@ def main(args=None):
 
     # fill the config file with input parameters
     cfg = manager.config.config
-    cfg.input_directory = os.path.abspath(options.bcl_directory)
-    cfg.bcl2fastq.threads = options.threads
-   
+    cfg.input_directory = os.path.abspath(options.input_directory)
+    cfg.input_pattern = options.input_pattern
+    if options.annotation:
+        cfg.snpeff.do = True
+        cfg.snpeff.reference_file = os.path.abspath(options.annotation)
+    
+    cfg.bwa_mem_ref.reference = os.path.abspath(options.reference)
+
+    import shutil
+    shutil.copy(options.reference, manager.workdir)
+
+
     manager.teardown()
 
 

@@ -128,7 +128,7 @@ sambamba_filter:
 # - gc_window_size: window size to compute GC content.
 #
 sequana_coverage:
-    do: yes
+    do: no
     k: 2
     circular: no
     window_size: 30001

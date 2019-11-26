@@ -54,7 +54,7 @@ Rules and configuration details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Here is a documented configuration file 
-:download:`../sequana/pipelines/variant_calling/config.yaml` to be used with the
+:download:`../sequana_pipelines/variant_calling/config.yaml` to be used with the
 pipeline. Each rule used in the pipeline may have a section in the
 configuration file. Here are the rules and their developer and user documentation.
 
