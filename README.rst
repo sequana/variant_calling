@@ -51,9 +51,7 @@ This pipelines requires the following executable(s):
 - samtools
 - snpEff
 
-
-
-.. image:: https://github.com/sequana/sequana_variant_calling/blob/master/sequana_pipelines/variant_calling/dag.png
+.. image:: https://raw.githubusercontent.com/sequana/sequana_variant_calling/master/sequana_pipelines/variant_calling/dag.png
 
 Details
 ~~~~~~~~
