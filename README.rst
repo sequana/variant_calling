@@ -1,6 +1,22 @@
+This is is the **variant_calling** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
+
 :Overview: Variant calling from FASTQ files
 :Input: FASTQ files from Illumina Sequencing instrument
 :Output: VCF and HTML files
+:Status: production
+:Citation: Cokelaer et al, (2017), 'Sequana': a Set of Snakemake NGS pipelines, Journal of Open Source Software, 2(16), 352, JOSS DOI https://doi:10.21105/joss.00352
+
+
+Installation
+~~~~~~~~~~~~
+
+You must install Sequana first::
+
+    pip install sequana
+
+Then, just install this package::
+
+    pip install sequana_variant_calling
 
 Usage
 ~~~~~
@@ -11,16 +27,33 @@ Usage
     sequana_pipelines_variant_calling --input-directory DATAPATH --run-mode local --reference measles.fa
     sequana_pipelines_variant_calling --input-directory DATAPATH --run-mode slurm --reference measles.fa
 
+This creates a directory **variant_calling**. You just need to execute the pipeline::
+
     cd variant_calling
     snakemake -s variant_calling.rules --stats stats.txt
+
+
+This launch a snakemake pipeline. If you are familiar with snakemake, you can retrieve the fastqc.rules and config.yaml files and then execute the pipeline yourself with specific parameters::
+
+    snakemake -s variant_calling.rules --cores 4 --stats stats.txt
+
+Or use `sequanix <https://sequana.readthedocs.io/en/master/sequanix.html>`_ interface.
 
 Requirements
 ~~~~~~~~~~~~
 
+This pipelines requires the following executable(s):
+
+- bwa
+- freebayes
+- picard (picard-tools)
+- sambamba
+- samtools
+- snpEff
 
 
 
-.. image:: https://raw.githubusercontent.com/sequana/sequana/master/sequana/pipelines/variant_calling/variant_calling_dag.png
+.. image:: https://raw.githubusercontent.com/sequana/sequana_variant_calling/master/sequana/pipelines/variant_calling/dag.png
 
 Details
 ~~~~~~~~
@@ -53,10 +86,6 @@ Finally, joint calling is also available and can be switch on if desired.
 Rules and configuration details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here is a documented configuration file 
-:download:`../sequana_pipelines/variant_calling/config.yaml` to be used with the
-pipeline. Each rule used in the pipeline may have a section in the
-configuration file. Here are the rules and their developer and user documentation.
 
 Mapping
 #########

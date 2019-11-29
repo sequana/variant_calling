@@ -13,14 +13,14 @@ metainfo = {
     'authors': {"main": ("cokelaer", "thomas.cokelaer@pasteur.fr")},
     'version': version,
     'license' : 'new BSD',
-    'download_url' : ['http://pypi.python.org/pypi/sequana'],
-    'url' : ["http://github.com/sequana/"],
-    'description': "A set of standalone application and pipelines dedicated to NGS (new generation sequencing) analysis" ,
+    'url' : "http://github.com/sequana/",
+    'description': "A variant calling pipeline to analyse sequencing Illumina data" ,
     'platforms' : ['Linux', 'Unix', 'MacOsX', 'Windows'],
-    'keywords' : [''],
+    'keywords' : ['snakemake', "sequana", "NGS", "freebayes", "variant calling"],
     'classifiers' : [
-          'Development Status :: 4 - Beta',
-          'Intended Audience :: Developers',
+          'Development Status :: 5 - Production/Stable',
+          'Intended Audience :: Education',
+          'Intended Audience :: End Users/Desktop',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Operating System :: OS Independent',
@@ -47,27 +47,20 @@ setup(
     license          = metainfo['license'],
     platforms        = metainfo['platforms'],
     url              = metainfo['url'],
-    download_url     = metainfo['download_url'],
     classifiers      = metainfo['classifiers'],
 
     # package installation
     packages = ["sequana_pipelines.variant_calling", 
         "sequana_pipelines.variant_calling.data"],
-    # Note, however, that e.g. ./pipelines must be added
 
-    # pillow, sphinx-gallery and numpydoc are for the doc only
-    # mock is for the test only qtconsole is required by Sequanix
+
     install_requires = "sequana",
-
-    # here below '': pattern means include that pattern in all packages
-    # so '' :['README.rst'] will include all README.rst recursively
-    # required to use python setup.py install
 
     # This is recursive include of data files
     exclude_package_data = {"": ["__pycache__"]},
     package_data = {
-        '': ['config.yaml', "variant_calling.rules"],
-        'sequana_pipelines.variant_calling.data': ['*.*'],
+        '': ['config.yaml', "*.rules", "*json", "requirements.txt", "*png"],
+        'sequana_pipelines.variant_calling.fastqc.data' : ['*.*'], 
         },
 
     zip_safe=False,

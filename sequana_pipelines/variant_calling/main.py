@@ -3,8 +3,7 @@ import os
 import argparse
 import shutil
 
-from sequana.pipelines_common import SlurmOptions, Colors, SnakemakeOptions
-from sequana.pipelines_common import PipelineManager
+from sequana.pipelines_common import *
 
 col = Colors()
 
@@ -39,6 +38,10 @@ class Options(argparse.ArgumentParser):
         so = SnakemakeOptions()
         so.add_options(self)
 
+        # add a data group of options to the parser
+        so = InputOptions()
+        so.add_options(self)
+
         self.add_argument(
             "--run-mode",
             dest="run_mode",
@@ -50,19 +53,6 @@ class Options(argparse.ArgumentParser):
         )
 
         pipeline_group = self.add_argument_group("pipeline")
-        pipeline_group.add_argument(
-            "--input-directory",
-            dest="input_directory",
-            default=".",
-            required=True,
-            help="Where to find the FastQ files (default current directory . ) ",
-        )
-        pipeline_group.add_argument(
-            "--input-pattern",
-            dest="input_pattern",
-            default="*fastq.gz",
-            help="pattern for the input FastQ files (default  *fastq.gz)",
-        )
         pipeline_group.add_argument(
             "--reference",
             dest="reference",
