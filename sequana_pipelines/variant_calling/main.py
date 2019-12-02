@@ -1,11 +1,17 @@
 import sys
 import os
 import argparse
-import shutil
 
 from sequana.pipelines_common import *
+from sequana.snaketools import Module
+from sequana import logger
+logger.level = "INFO"
 
 col = Colors()
+
+NAME = "variant_calling"
+m = Module(NAME)
+m.is_executable()
 
 
 class Options(argparse.ArgumentParser):
@@ -20,11 +26,11 @@ class Options(argparse.ArgumentParser):
 
             For a local run, use :
 
-                sequana_pipelines_variant_calling --fastq-directory PATH_TO_DATA --run-mode local
+                sequana_pipelines_variant_calling --input-directory PATH_TO_DATA --run-mode local
 
             For a run on a SLURM cluster:
 
-                sequana_pipelines_variant_calling --fastq-directory PATH_TO_DATA --run-mode slurm
+                sequana_pipelines_variant_calling --input-directory PATH_TO_DATA --run-mode slurm
 
         """
         )
@@ -35,22 +41,15 @@ class Options(argparse.ArgumentParser):
         so.add_options(self)
 
         # add a snakemake group of options to the parser
-        so = SnakemakeOptions()
+        so = SnakemakeOptions(working_directory=NAME)
         so.add_options(self)
 
         # add a data group of options to the parser
         so = InputOptions()
         so.add_options(self)
 
-        self.add_argument(
-            "--run-mode",
-            dest="run_mode",
-            required=True,
-            choices=['local', 'slurm'],
-            help="""run_mode can be either 'local' or 'slurm'. Use local to run
-                the pipeline locally, otherwise use 'slurm' to run on a cluster
-                with SLURM scheduler"""
-        )
+        so = GeneralOptions()
+        so.add_options(self)
 
         pipeline_group = self.add_argument_group("pipeline")
         pipeline_group.add_argument(
@@ -69,7 +68,6 @@ class Options(argparse.ArgumentParser):
 
 
 def main(args=None):
-    NAME = "variant_calling"
     if args is None:
         args = sys.argv
 
@@ -90,10 +88,8 @@ def main(args=None):
     
     cfg.bwa_mem_ref.reference = os.path.abspath(options.reference)
 
-    import shutil
-    shutil.copy(options.reference, manager.workdir)
-
-
+    # finalise the command and save it; copy the snakemake. update the config
+    # file and save it.
     manager.teardown()
 
 
