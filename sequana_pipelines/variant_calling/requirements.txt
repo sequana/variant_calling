@@ -1,6 +1,6 @@
-bwa
-freebayes
-picard (picard-tools)
-sambamba
-samtools
-snpEff
+- bwa
+- freebayes
+- picard (picard-tools)
+- sambamba
+- samtools
+- snpEff
