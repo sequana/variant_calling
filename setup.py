@@ -5,7 +5,7 @@ from setuptools import setup, find_namespace_packages
 
 _MAJOR               = 0
 _MINOR               = 8
-_MICRO               = 5
+_MICRO               = 6
 version              = '%d.%d.%d' % (_MAJOR, _MINOR, _MICRO)
 release              = '%d.%d' % (_MAJOR, _MINOR)
 
@@ -59,14 +59,15 @@ setup(
     # This is recursive include of data files
     exclude_package_data = {"": ["__pycache__"]},
     package_data = {
-        '': ['config.yaml', "*.rules", "*json", "requirements.txt", "*png"],
+        '': ['*.yaml', "*.rules", "*json", "requirements.txt", "*png"],
         'sequana_pipelines.variant_calling.fastqc.data' : ['*.*'], 
         },
 
     zip_safe=False,
 
     entry_points = {'console_scripts':[
-        'sequana_pipelines_variant_calling=sequana_pipelines.variant_calling.main:main']
+        'sequana_pipelines_variant_calling=sequana_pipelines.variant_calling.main:main',
+        'sequana_variant_calling=sequana_pipelines.variant_calling.main:main']
     }
 
 )
