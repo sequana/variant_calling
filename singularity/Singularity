@@ -1,0 +1,22 @@
+Bootstrap: localimage
+From: sequana.img
+
+%labels
+    Author thomas cokelaer
+    Version v1.0
+
+
+%post
+
+    export PATH=$PATH:/usr/local/anaconda/bin
+    pip  install sequana_variant_calling 
+
+    # install dependencies
+    #conda install fastqc
+
+%runscript
+    echo "Welcome to sequana fastqc pipeline"
+    exec sequana_pipelines_variant_calling --version
+    exec sequana_pipelines_variant_calling "$@"
+
+

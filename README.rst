@@ -24,18 +24,18 @@ Usage
 ::
 
     sequana_pipelines_variant_calling --help
-    sequana_pipelines_variant_calling --input-directory DATAPATH --run-mode local --reference measles.fa
-    sequana_pipelines_variant_calling --input-directory DATAPATH --run-mode slurm --reference measles.fa
+    sequana_pipelines_variant_calling --input-directory DATAPATH --reference measles.fa
+    sequana_pipelines_variant_calling --input-directory DATAPATH --reference measles.fa
 
 This creates a directory **variant_calling**. You just need to execute the pipeline::
 
     cd variant_calling
-    snakemake -s variant_calling.rules --stats stats.txt
+    sh variant_calling.sh
 
+This launch a snakemake pipeline. If you are familiar with snakemake, you can 
+retrieve the pipeline itself and its configuration files and then execute the pipeline yourself with specific parameters::
 
-This launch a snakemake pipeline. If you are familiar with snakemake, you can retrieve the fastqc.rules and config.yaml files and then execute the pipeline yourself with specific parameters::
-
-    snakemake -s variant_calling.rules --cores 4 --stats stats.txt
+    snakemake -s variant_calling.rules -c config.yaml --cores 4 --stats stats.txt
 
 Or use `sequanix <https://sequana.readthedocs.io/en/master/sequanix.html>`_ interface.
 
