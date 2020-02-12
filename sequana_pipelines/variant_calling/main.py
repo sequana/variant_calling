@@ -34,8 +34,9 @@ class Options(argparse.ArgumentParser):
 
         """
         )
-        super(Options, self).__init__(usage=usage, prog=prog, description="")
-
+        super(Options, self).__init__(usage=usage, prog=prog, description="",
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
         # add a new group of options to the parser
         so = SlurmOptions()
         so.add_options(self)
@@ -86,10 +87,11 @@ def main(args=None):
     cfg = manager.config.config
     cfg.input_directory = os.path.abspath(options.input_directory)
     cfg.input_pattern = options.input_pattern
+    cfg.input_readtag = options.input_readtag
     if options.annotation:
         cfg.snpeff.do = True
         cfg.snpeff.reference_file = os.path.abspath(options.annotation)
-    
+
     cfg.bwa_mem_ref.reference = os.path.abspath(options.reference)
 
     # finalise the command and save it; copy the snakemake. update the config

@@ -81,40 +81,13 @@ such as particular codon table will required edition of the snpeff configuration
 Finally, joint calling is also available and can be switch on if desired.
 
 
-Rules and configuration details
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Changelog
+~~~~~~~~~
 
+========= ====================================================================
+Version   Description
+========= ====================================================================
+0.9.1     * Fix input-readtag, which was not populated
+0.9.0     First release
+========= ====================================================================
 
-Mapping
-#########
-
-This pipeline uses the following rule from Sequana to perform the mapping and
-marking duplicates.
-
-- snpeff_add_locus_in_fasta
-- bwa_mem_dynamic
-- sambamba_markdup
-- sambamba_filter
-
-Variant Calling
-###################
-
-The variant calling itself depends on those rules:
-
-- freebayes
-- freebayes_vcf_filter
-
-Joint variants calling
-#########################
-
-- joint_freebayes
-- joint_freebayes_vcf_filter
-
-Annotation
-####################
-- snpeff
-
-Coverage analysis
-###################
-- samtools_depth
-- sequana_coverage

@@ -14,8 +14,12 @@ If you use **Sequana**, please do not forget to cite us:
     Cokelaer et al, (2017), 'Sequana': a Set of Snakemake NGS pipelines, Journal of
     Open Source Software, 2(16), 352, `JOSS DOI doi:10.21105/joss.00352 <http://www.doi2bib.org/bib/10.21105/joss.00352>`_
 
-.. contents::
-   :depth: 2
+The Sequana variant_calling pipeline
+==============================================
+
+.. include:: ../README.rst
+
+
 
 What is Sequana ?
 =====================
@@ -34,11 +38,4 @@ What is Sequana ?
 To join the project, please let us know on `github <https://github.com/sequana/sequana/issues/306>`_.
 
 For more information, please see `github <https://sequana.readthedocs.io>`_.
-
-The Sequana variant_calling pipeline
-==============================================
-
-.. include:: ../README.rst
-
-
 
