@@ -5,5 +5,9 @@ url: https://github.com/sequana/sequana_variant_calling/blob/master/sequana_pipe
 categories: [variant_calling] 
 authors:   
     - firstname: Thomas
-    - lastname: Cokelaer
-    - email: thomas.cokelaer@pasteur.fr
+      lastname: Cokelaer
+      email: thomas.cokelaer@pasteur.fr
+    - firstname: Dimitri
+      lastname: Desvillechabrol
+      
+
