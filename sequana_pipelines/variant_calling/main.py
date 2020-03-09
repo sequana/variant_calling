@@ -66,6 +66,16 @@ class Options(argparse.ArgumentParser):
             help="The annotation for snpeff"
         )
         pipeline_group.add_argument("--threads", dest="threads", default=4, type=int)
+        pipeline_group.add_argument("--do-coverage", dest="do_coverage", 
+            action="store_true", 
+            help="perform the coverage analysis using sequana_coverage")
+        pipeline_group.add_argument("--do-joint-calling", dest="do_joint_calling", 
+            action="store_true", 
+            help="do the joint calling analysise")
+
+        pipeline_group.add_argument("-o", "--circular", action="store_true")
+        pipeline_group.add_argument("--freebayes-ploidy", type=int, default=1)
+
 
 
 def main(args=None):
@@ -88,11 +98,35 @@ def main(args=None):
     cfg.input_directory = os.path.abspath(options.input_directory)
     cfg.input_pattern = options.input_pattern
     cfg.input_readtag = options.input_readtag
+    cfg.paired_data = options.paired_data
+
     if options.annotation:
         cfg.snpeff.do = True
-        cfg.snpeff.reference_file = os.path.abspath(options.annotation)
+        cfg.annotation_file = os.path.abspath(options.annotation)
+        manager.exists(cfg.annotation_file)
+        print("." in cfg.annotation_file,  cfg.annotation_file.split(".")[-1])
+        if "." not in cfg.annotation_file or \
+            cfg.annotation_file.split(".")[-1] not in ['gbk', 'gff', 'gff3']:
 
-    cfg.bwa_mem_ref.reference = os.path.abspath(options.reference)
+            logger.error("The annotation file must end with .gbk or .gff or .gff3. You provided {}".format(cfg.annotation_file))
+            sys.exit(1)
+        cfg['sequana_coverage']['genbank_file'] = cfg.annotation_file
+
+    cfg['sequana_coverage']['do'] = options.do_coverage
+    cfg['sequana_coverage']["circular"] = options.circular
+
+
+    cfg['joint_freebayes']['do'] = options.do_joint_calling
+    
+
+    cfg['bwa_mem_ref']['threads'] = options.threads
+    cfg['freebayes']['ploidy'] = options.freebayes_ploidy
+
+    cfg.reference_file = os.path.abspath(options.reference)
+    manager.exists(cfg.reference_file)
+
+    # coverage
+
 
     # finalise the command and save it; copy the snakemake. update the config
     # file and save it.

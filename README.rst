@@ -87,6 +87,16 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.9.2     * snpeff output files are renamed sample.snpeff (instead of
+            samplesnpeff)
+          * add multiqc to show sequana_coverage and snpeff summary sections
+          * cleanup onsuccess section
+          * more options sanity checks and options (e.g., 
+          * genbank_file renamed into annotation_file in the config
+          * use --legacy in freebayes options
+          * fix coverage section to use new sequana api
+          * add the -do-coverage, --do-joint-calling options as well as
+            --circular and --frebayes--ploidy
 0.9.1     * Fix input-readtag, which was not populated
 0.9.0     First release
 ========= ====================================================================

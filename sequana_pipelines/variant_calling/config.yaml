@@ -8,24 +8,28 @@
 # use it, otherwise use input_samples.
 # ============================================================================
 #
+# Mandatory fields
 input_directory: "%(input_directory)s"
 input_readtag: "%(input_readtag)s"
 input_pattern: "%(input_pattern)s"
+annotation_file:
+reference_file:
+paired_data:
 
-##############################################################################
-# Sequencing information section
+
+#################################################################
+# sequencing information. These informations will be inserted as
+# read group in BAM files
 #
 # :Parameters:
-# 
-# - platform: name of the technology.
-# - instrument: name of the instrument.
-# - flowcell: name of the flowcell.
 #
+# - platform: Name of the sequencing platform
+# - instrument: name ot the instrument type
+# - flowcell: flowcell ID
 sequencing:
-    platform: "Illumina"
-    instrument: "Unknown"
-    flowcell: "Unknown"
-
+    platform: Illumina
+    instrument: Hiseq2500
+    flowcell: H35CTBCXY
 ##############################################################################
 # BWA - Mapping
 #
@@ -38,7 +42,6 @@ sequencing:
 # - tmp_directory: temporary directory
 #
 bwa_mem_ref:
-    reference: "%(reference)s"
     index_algorithm: 'is'
     options: '-T 30'
     threads: 2
@@ -53,6 +56,8 @@ bwa_mem_ref:
 # - reference: genbank file.
 # - options: any options recognised by snpEff.
 #
+# Requires the annotation file
+#
 #   Results filter options:
 #	    -no-downstream: Do not show DOWNSTREAM changes
 #	    -no-intergenic: Do not show INTERGENIC changes
@@ -62,7 +67,6 @@ bwa_mem_ref:
 #
 snpeff:
     do: no
-    reference_file:
     options: "-no-downstream -no-upstream"
 
 ##############################################################################
@@ -75,7 +79,7 @@ snpeff:
 #
 freebayes:
     ploidy: 1
-    options:
+    options: --legacy-gls
 
 ##############################################################################
 # Joint Freebayes - Variant caller
@@ -85,7 +89,7 @@ freebayes:
 # - options: any options recognised by freebayes.
 #
 joint_freebayes:
-    do: yes
+    do: false
     options:
 
 ##############################################################################
@@ -120,7 +124,7 @@ sambamba_filter:
 # :Parameters:
 #
 # - do: if unchecked, this rule is ignored.
-# - k: number of gaussian predicted.
+# - mixture_models: number of gaussian predicted.
 # - circular: if your genome is circular.
 # - window_size: window size to compute the running median.
 # - low_threshold: threshold to detect low coverage regions.
@@ -128,13 +132,17 @@ sambamba_filter:
 # - gc_window_size: window size to compute GC content.
 #
 sequana_coverage:
-    do: no
-    k: 2
-    circular: no
-    window_size: 30001
-    low_threshold: -4.0
-    high_threshold: 4.0
+    do: false
+    circular: true
+    window_size: 3001
+    chunksize: 5000000
+    double_threshold: 0.5
     gc_window_size: 201
+    genbank_file: ''
+    high_threshold: 4.0
+    low_threshold: -4.0
+    mixture_models: 2
+    reference_file:
 
 ##############################################################################
 # Filter VCF
@@ -169,3 +177,22 @@ joint_freebayes_vcf_filter:
     freebayes_score: 200
     frequency: 0.8
     min_depth: 20
+
+
+###########################################################################
+#   MultiQC aggregates results from bioinformatics analyses across many
+#   samples into a single report.
+#
+# :Parameters:
+#
+# - options: any options recognised by multiqc
+# - output-directory: Create report in the specified output directory
+# - config_file: by default, we use sequana RNA-seq multiqc_config file. 
+#       If you want your own multiqc, fill this entry
+multiqc:
+    options: "-p -f -m snpeff -m sequana_coverage"
+    outdir: multiqc
+    config_file: multiqc_config.yaml
+
+                                                                                             
+
