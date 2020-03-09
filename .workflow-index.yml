@@ -1,0 +1,14 @@
+language: Snakemake 
+name: sequana_variant_calling
+description: Variant calling from FASTQ files
+url: https://github.com/sequana/sequana_variant_calling/blob/master/sequana_pipelines/variant_calling/variant_calling.rules
+categories: [variant_calling] 
+authors:   
+    - firstname: Thomas
+      lastname: Cokelaer
+      email: thomas.cokelaer@pasteur.fr
+    - firstname: Dimitri
+      lastname: Desvillechabrol
+      email: d.desvillechabrol@gmail.com
+      
+
