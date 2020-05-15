@@ -23,9 +23,9 @@ Usage
 
 ::
 
-    sequana_pipelines_variant_calling --help
-    sequana_pipelines_variant_calling --input-directory DATAPATH --reference measles.fa
-    sequana_pipelines_variant_calling --input-directory DATAPATH --reference measles.fa
+    sequana_variant_calling --help
+    sequana_variant_calling --input-directory DATAPATH --reference-file measles.fa
+    sequana_variant_calling --input-directory DATAPATH --reference-file measles.fa
 
 This creates a directory **variant_calling**. You just need to execute the pipeline::
 

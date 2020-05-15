@@ -70,7 +70,7 @@ if config["snpeff"]["do"]:
     include: sm.modules["snpeff_add_locus_in_fasta/1.1"]
     __bwa_mem_ref__reference = __snpeff_add_locus_in_fasta__output
 # Copy the reference index if it exists
-elif not os.path.isfile(reference + ".fai"):
+elif not os.path.isfile(reference_file + ".fai"):
     exec(open(sequana.modules["dynamic_copy"], "r").read())
     __copy_ref__input = reference
     __copy_ref__output = "reference/" + os.path.basename(reference_file)
@@ -99,9 +99,9 @@ __add_read_group__output = manager.getname("add_read_group", ".rg.sorted.bam")
 __add_read_group__log_err = manager.getlogdir("add_read_group.err")
 __add_read_group__log_std = manager.getlogdir("add_read_group.std")
 __add_read_group__rg = "ID=%s LB=%s PL=%s PU=%s SM=%s" % (
-    manager.sample, manager.sample, 
+    manager.sample, manager.sample,
     manager.config.sequencing.platform,
-    manager.config.sequencing.flowcell, 
+    manager.config.sequencing.flowcell,
     manager.sample)
 include: sm.modules["add_read_group"]
 
@@ -298,12 +298,20 @@ expected_output.extend(expand(__summary_pipeline__json_output,
 
 
 
-__multiqc__input = expected_output + expand( __snpeff__output, sample=manager.samples)
+__multiqc__input = expected_output 
+if config['snpeff']['do']: 
+    __multiqc__input += expand( __snpeff__output, sample=manager.samples)
+    config["multiqc"]["options"] += " -m snpeff "
 if config["sequana_coverage"]['do']:
     __multiqc__input += expand( __sequana_coverage__html, sample=manager.samples)
-__multiqc__output = "multiqc/multiqc_report.html"
-include: sm.modules["multiqc/2.0"]
-expected_output += [__multiqc__output]
+    config["multiqc"]["options"] += " -m sequana_coverage"
+
+if config['snpeff']['do'] is False and config["sequana_coverage"]['do'] is False:
+    pass
+else:
+    __multiqc__output = "multiqc/multiqc_report.html"
+    include: sm.modules["multiqc/2.0"]
+    expected_output += [__multiqc__output]
 
 rule pipeline_variant:
     input: expected_output
@@ -348,22 +356,33 @@ onsuccess:
         except (FileNotFoundError, NameError):
             pass
 
-    shell("ln -f -s {} index.html".format(__multiqc__output))
+    #shell("ln -f -s {} index.html".format(__multiqc__output))
     shell("chmod -R g+w .")
 
-    manager.teardown(extra_files_to_remove=['snpEff.config', 'requirements.txt'])
-    manager.clean_multiqc(__multiqc__output)
+    manager.teardown(extra_files_to_remove=['snpEff.config', 'requirements.txt'],
+            extra_dirs_to_remove=['tmp', 'common_logs'])
+    try:
+        # with some options, multiqc is not created
+        manager.clean_multiqc(__multiqc__output)
+        intro = """<h2>Overview</h2>
+            This pipeline calls variants on a set of samples. Individual reports are available 
+            as well as a <a href="multiqc/multiqc_report.html">multiqc report</a>."""
+    except:
+        intro = """<h2>Overview</h2>
+            This pipeline calls variants on a set of samples. Please see individual reports for details."""
 
-    data = {"name": "mapper",
+    intro += "<h2>Individual Reports</h2>"
+    for sample in manager.samples:
+        intro += '<a href="report_vc_{}/summary.html">{} </a>'.format(sample, sample)
+
+    data = {"name": "variant_calling",
             "rulegraph": __rulegraph__output,
             "stats": "stats.txt"}
 
-    intro = """<h2>Overview</h2>
-This pipeline calls variants on a set of samples. Individual reports are available 
-as well as a <a href="multiqc/multiqc_report.html">multiqc report</a>."""
     from sequana.utils import config
     config.output_dir = os.path.abspath(".")
     s = SummaryModule2(data, intro=intro)
+
 
 onerror:
     print("An error occurred. See message above.")

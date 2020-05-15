@@ -14,8 +14,8 @@ annotation = os.sep.join([sequana_path , "sequana_pipelines/variant_calling", 'd
 def test_standalone_subprocess():
     directory = tempfile.TemporaryDirectory()
     cmd = "sequana_pipelines_variant_calling --input-directory {} "
-    cmd += "--working-directory {} --run-mode local --force --annotation {} "
-    cmd += " --reference {}"
+    cmd += "--working-directory {} --run-mode local --force --annotation-file {} "
+    cmd += " --reference-file {}"
     cmd = cmd.format(sharedir, directory.name, annotation, reference)
     subprocess.call(cmd.split())
 
@@ -38,8 +38,8 @@ def test_check_output():
     with tempfile.TemporaryDirectory() as wk:
 
         cmd = "sequana_pipelines_variant_calling --input-directory {} "
-        cmd += "--working-directory {} --run-mode local --force --annotation {} "
-        cmd += " --reference {}"
+        cmd += "--working-directory {} --run-mode local --force --annotation-file {} "
+        cmd += " --reference-file {}"
         cmd = cmd.format(sharedir, wk, annotation, reference)
         # create the wokring directory and script
         subprocess.call(cmd.split())
@@ -52,7 +52,7 @@ def test_check_output():
         vcf.rewind()
         vv = [Variant(v)._resume for v in vcf]
         # this may change depending on the freebayes version...
-        assert len(vv) in (63,)
+        assert len(vv) in (67,)
         vv = vv[0].copy()
         del vv['freebayes_score']
         assert vv == {'alternative': 'T',
@@ -63,6 +63,9 @@ def test_check_output():
              'position': '2221',
              'reference': 'C',
              'strand_balance': '0.33'}
+        
 
 
-test_check_output()
+def test_version():
+    cmd = "sequana_pipelines_variant_calling --version"
+    subprocess.call(cmd.split())

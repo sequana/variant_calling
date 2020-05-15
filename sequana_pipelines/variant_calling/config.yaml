@@ -14,7 +14,6 @@ input_readtag: "%(input_readtag)s"
 input_pattern: "%(input_pattern)s"
 annotation_file:
 reference_file:
-paired_data:
 
 
 #################################################################
@@ -28,8 +27,8 @@ paired_data:
 # - flowcell: flowcell ID
 sequencing:
     platform: Illumina
-    instrument: Hiseq2500
-    flowcell: H35CTBCXY
+    instrument: unknown
+    flowcell: unknown
 ##############################################################################
 # BWA - Mapping
 #
