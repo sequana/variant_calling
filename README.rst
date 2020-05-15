@@ -87,6 +87,11 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.9.3     * use new framework (faster --help, --from-project option)
+          * rename --reference into --reference-file and --annotation to
+            --annotation-file
+          * add custom summary page
+          * add multiqc config file
 0.9.2     * snpeff output files are renamed sample.snpeff (instead of
             samplesnpeff)
           * add multiqc to show sequana_coverage and snpeff summary sections

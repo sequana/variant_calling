@@ -16,7 +16,7 @@
 #
 ##############################################################################
 """
-Author: Dimitri Desvillechabrol
+Author: Dimitri Desvillechabrol, Thomas Cokelaer
 Affiliation: Institut Pasteur
 Aim: Variant calling
 Data: paired end or single reads
@@ -26,15 +26,20 @@ import os
 
 import sequana
 from sequana import snaketools as sm
-from sequana.snaketools import SequanaConfig
+
 
 from sequana import sequana_data
 
-sm.init("variant_calling.rules", globals())
+
 
 # This must be defined before the include
 configfile: "config.yaml"
+
+
+# A convenient manager
 manager = sm.PipelineManager("variant_calling", config)
+manager.setup(globals(), mode="warning")
+
 
 # Clean template and replace None with empty string
 config = manager.config
@@ -244,11 +249,11 @@ if config['joint_freebayes']['do']:
 # Create requirements.txt(dependencies)
 __conda__output = "requirements.txt"
 include: sm.modules["conda"]
-expected_output.append([__conda__output])
+expected_output.append(__conda__output)
 
 # Create rulegraph
-__rulegraph__input = __snakefile__
-__rulegraph__output = "rulegraph/rulegraph.svg"
+__rulegraph__input = manager.snakefile
+__rulegraph__output = ".sequana/rulegraph.svg"
 __rulegraph__mapper = {
     "sequana_coverage": "../sequana_coverage.html",
     "freebayes_vcf_filter": "../variant_calling.html",
@@ -296,28 +301,14 @@ expected_output.extend(expand(__summary_pipeline__json_output,
 __multiqc__input = expected_output + expand( __snpeff__output, sample=manager.samples)
 if config["sequana_coverage"]['do']:
     __multiqc__input += expand( __sequana_coverage__html, sample=manager.samples)
-
-__multiqc__logs = "multiqc/multiqc.log"
 __multiqc__output = "multiqc/multiqc_report.html"
-#__multiqc__input_dir = "."
-rule multiqc:
-    input: __multiqc__input
-    output: __multiqc__output
-    params:
-        inputdir = ".",
-        outdir="multiqc",
-        config=sequana_data("multiqc_config.yaml", "../multiqc"),
-        options = config["multiqc"]["options"]
-    shell:
-        """
-        multiqc {params.inputdir} -o {params.outdir} -c {params.config} {params.options} 2> multiqc/multiqc.log
-        """
+include: sm.modules["multiqc/2.0"]
+expected_output += [__multiqc__output]
 
 rule pipeline_variant:
-    input:
-        expected_output + ["multiqc/multiqc_report.html"]
-    output: "done"
-    shell: touch("done")
+    input: expected_output
+    #output: "done"
+    #shell: touch("done")
 
 
 # these rules don't need to be submit on a node.
@@ -331,13 +322,12 @@ onsuccess:
     import shutil
     import json
 
-    from sequana.modules_report.summary import SummaryModule
-    from sequana.utils import config as conf
+    from sequana import logger
+    logger.level = "INFO"
 
-    # add file name for snakemake stats in json
-    snake_parser = snakemake.get_argument_parser().parse_args()
-    json_list = expand(__summary_pipeline__json_output, sample=manager.samples)
-    sm.add_stats_summary_json(json_list, snake_parser)
+    from sequana.modules_report.summary import SummaryModule
+    from sequana.modules_report.summary import SummaryModule2
+    from sequana.utils import config as conf
 
     # create summary pipeline for each samples
     report_dir_format = 'report_vc_{0}'
@@ -358,24 +348,27 @@ onsuccess:
         except (FileNotFoundError, NameError):
             pass
 
-
     shell("ln -f -s {} index.html".format(__multiqc__output))
     shell("chmod -R g+w .")
 
-    from sequana.snaketools import OnSuccessCleaner
-    sc = OnSuccessCleaner("variant_calling")
-    sc.files_to_remove.append("snpEff.config")
-    sc.files_to_remove.append("requirements.txt")
-    sc.add_makefile()
-    sm.clean_multiqc(__multiqc__output)
+    manager.teardown(extra_files_to_remove=['snpEff.config', 'requirements.txt'])
+    manager.clean_multiqc(__multiqc__output)
 
+    data = {"name": "mapper",
+            "rulegraph": __rulegraph__output,
+            "stats": "stats.txt"}
 
+    intro = """<h2>Overview</h2>
+This pipeline calls variants on a set of samples. Individual reports are available 
+as well as a <a href="multiqc/multiqc_report.html">multiqc report</a>."""
+    from sequana.utils import config
+    config.output_dir = os.path.abspath(".")
+    s = SummaryModule2(data, intro=intro)
 
+onerror:
+    print("An error occurred. See message above.")
 
-
-
-
-
+    
 
 
 

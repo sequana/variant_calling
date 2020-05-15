@@ -191,8 +191,4 @@ joint_freebayes_vcf_filter:
 #       If you want your own multiqc, fill this entry
 multiqc:
     options: "-p -f -m snpeff -m sequana_coverage"
-    outdir: multiqc
-    config_file: multiqc_config.yaml
-
-                                                                                             
 

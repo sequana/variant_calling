@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 # License: 3-clause BSD
-__revision__ = "$Id: $" # for the SVN Id
 from setuptools import setup, find_namespace_packages
+from setuptools.command.develop import develop
+from setuptools.command.install import install
+import subprocess
 
 _MAJOR               = 0
 _MINOR               = 9
-_MICRO               = 2
+_MICRO               = 4
 version              = '%d.%d.%d' % (_MAJOR, _MINOR, _MICRO)
 release              = '%d.%d' % (_MAJOR, _MINOR)
 
@@ -18,9 +20,11 @@ metainfo = {
     'platforms' : ['Linux', 'Unix', 'MacOsX', 'Windows'],
     'keywords' : ['snakemake', "sequana", "NGS", "freebayes", "variant calling"],
     'classifiers' : [
-          'Development Status :: 5 - Production/Stable',
+          'Development Status :: 4 - Beta',
+          #'Development Status :: 5 - Production/Stable',
           'Intended Audience :: Education',
           'Intended Audience :: End Users/Desktop',
+          'Intended Audience :: Developers',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Operating System :: OS Independent',
@@ -33,9 +37,24 @@ metainfo = {
           'Topic :: Scientific/Engineering :: Physics']
     }
 
+NAME = "variant_calling"
+
+class Install(install):
+    def run(self):
+        cmd = "sequana_completion --name {} --force ".format(NAME)
+        try: subprocess.run(cmd.split())
+        except:pass
+        install.run(self)
+
+class Develop(develop):
+    def run(self):
+        cmd = "sequana_completion --name {} --force ".format(NAME)
+        try:subprocess.run(cmd.split())
+        except:pass
+        develop.run(self)
 
 setup(
-    name             = "sequana_variant_calling",
+    name             = "sequana_{}".format(NAME),
     version          = version,
     maintainer       = metainfo['authors']['main'][0],
     maintainer_email = metainfo['authors']['main'][1],
@@ -53,8 +72,7 @@ setup(
     packages = ["sequana_pipelines.variant_calling", 
         "sequana_pipelines.variant_calling.data"],
 
-
-    install_requires = "sequana",
+    install_requires = open("requirements.txt").read(),
 
     # This is recursive include of data files
     exclude_package_data = {"": ["__pycache__"]},

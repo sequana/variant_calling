@@ -2,39 +2,20 @@ import sys
 import os
 import argparse
 
-from sequana.pipelines_common import *
-from sequana.snaketools import Module
-from sequana import logger
-logger.level = "INFO"
+from sequana_pipetools.options import *
+from sequana_pipetools.misc import Colors
+from sequana_pipetools.info import sequana_epilog, sequana_prolog
 
 col = Colors()
 
 NAME = "variant_calling"
-m = Module(NAME)
-m.is_executable()
 
 
 class Options(argparse.ArgumentParser):
-    def __init__(self, prog="variant_calling"):
-        usage = col.purple(
-            """This script prepares the sequana pipeline variant_calling layout to
-            include the Snakemake pipeline and its configuration file ready to
-            use.
-
-            In practice, it copies the config file and the pipeline into a
-            directory (variant_calling) together with an executable script
-
-            For a local run, use :
-
-                sequana_pipelines_variant_calling --input-directory PATH_TO_DATA --run-mode local
-
-            For a run on a SLURM cluster:
-
-                sequana_pipelines_variant_calling --input-directory PATH_TO_DATA --run-mode slurm
-
-        """
-        )
+    def __init__(self, prog=NAME, epilog=None):
+        usage = col.purple(sequana_prolog.format(**{"name": NAME}))
         super(Options, self).__init__(usage=usage, prog=prog, description="",
+            epilog=epilog,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
         # add a new group of options to the parser
@@ -54,13 +35,13 @@ class Options(argparse.ArgumentParser):
 
         pipeline_group = self.add_argument_group("pipeline")
         pipeline_group.add_argument(
-            "--reference",
+            "--reference-file",
             dest="reference",
             required=True,
             help="The input reference to mapped reads onto"
         )
         pipeline_group.add_argument(
-            "--annotation",
+            "--annotation-file",
             dest="annotation",
             default=None,
             help="The annotation for snpeff"
@@ -76,56 +57,77 @@ class Options(argparse.ArgumentParser):
         pipeline_group.add_argument("-o", "--circular", action="store_true")
         pipeline_group.add_argument("--freebayes-ploidy", type=int, default=1)
 
+        pipeline_group.add_argument("--create-bigwig", action="store_true",
+            help="create the bigwig files from the BAM files" )
+
+    def parse_args(self, *args):
+        args_list = list(*args)
+        if "--from-project" in args_list:
+            if len(args_list)>2:
+                msg = "WARNING [sequana]: With --from-project option, " + \
+                        "pipeline and data-related options will be ignored."
+                print(col.error(msg))
+            for action in self._actions:
+                if action.required is True:
+                    action.required = False
+        options = super(Options, self).parse_args(*args)
+        return options
 
 
 def main(args=None):
+
     if args is None:
         args = sys.argv
 
-    if "--version" in sys.argv:
-        print_version(NAME)
-        sys.exit(0)
+    # whatever needs to be called by all pipeline before the options parsing
+    from sequana_pipetools.options import before_pipeline
+    before_pipeline(NAME)
 
-    options = Options(NAME).parse_args(args[1:])
+    # option parsing including common epilog
+    options = Options(NAME, epilog=sequana_epilog).parse_args(args[1:])
 
-    manager = PipelineManager(options, NAME)
+
+    from sequana.pipelines_common import SequanaManager
+
+    # the real stuff is here
+    manager = SequanaManager(options, NAME)
 
     # create the beginning of the command and the working directory
     manager.setup()
 
     # fill the config file with input parameters
-    cfg = manager.config.config
-    cfg.input_directory = os.path.abspath(options.input_directory)
-    cfg.input_pattern = options.input_pattern
-    cfg.input_readtag = options.input_readtag
-    cfg.paired_data = options.paired_data
+    if options.from_project is None:
+        cfg = manager.config.config
+        cfg.input_directory = os.path.abspath(options.input_directory)
+        cfg.input_pattern = options.input_pattern
+        cfg.input_readtag = options.input_readtag
 
-    if options.annotation:
-        cfg.snpeff.do = True
-        cfg.annotation_file = os.path.abspath(options.annotation)
-        manager.exists(cfg.annotation_file)
-        print("." in cfg.annotation_file,  cfg.annotation_file.split(".")[-1])
-        if "." not in cfg.annotation_file or \
-            cfg.annotation_file.split(".")[-1] not in ['gbk', 'gff', 'gff3']:
+        if options.annotation:
+            cfg.snpeff.do = True
+            cfg.annotation_file = os.path.abspath(options.annotation)
+            manager.exists(cfg.annotation_file)
+            #print("." in cfg.annotation_file,  cfg.annotation_file.split(".")[-1])
+            if "." not in cfg.annotation_file or \
+                cfg.annotation_file.split(".")[-1] not in ['gbk', 'gff', 'gff3']:
+    
+                logger.error("The annotation file must end with .gbk or .gff or .gff3. You provided {}".format(cfg.annotation_file))
+                sys.exit(1)
+            cfg['sequana_coverage']['genbank_file'] = cfg.annotation_file
 
-            logger.error("The annotation file must end with .gbk or .gff or .gff3. You provided {}".format(cfg.annotation_file))
-            sys.exit(1)
-        cfg['sequana_coverage']['genbank_file'] = cfg.annotation_file
-
-    cfg['sequana_coverage']['do'] = options.do_coverage
-    cfg['sequana_coverage']["circular"] = options.circular
+        cfg['sequana_coverage']['do'] = options.do_coverage
+        cfg['sequana_coverage']["circular"] = options.circular
 
 
-    cfg['joint_freebayes']['do'] = options.do_joint_calling
+        cfg['joint_freebayes']['do'] = options.do_joint_calling
     
 
-    cfg['bwa_mem_ref']['threads'] = options.threads
-    cfg['freebayes']['ploidy'] = options.freebayes_ploidy
+        cfg['bwa_mem_ref']['threads'] = options.threads
+        cfg['freebayes']['ploidy'] = options.freebayes_ploidy
 
-    cfg.reference_file = os.path.abspath(options.reference)
-    manager.exists(cfg.reference_file)
+        cfg.reference_file = os.path.abspath(options.reference)
+        manager.exists(cfg.reference_file)
 
-    # coverage
+        # coverage
 
 
     # finalise the command and save it; copy the snakemake. update the config
