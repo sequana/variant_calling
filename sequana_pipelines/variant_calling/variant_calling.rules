@@ -72,7 +72,7 @@ if config["snpeff"]["do"]:
 # Copy the reference index if it exists
 elif not os.path.isfile(reference_file + ".fai"):
     exec(open(sequana.modules["dynamic_copy"], "r").read())
-    __copy_ref__input = reference
+    __copy_ref__input = reference_file
     __copy_ref__output = "reference/" + os.path.basename(reference_file)
     include: dynamic_copy("ref", manager)
     __bwa_mem_ref__reference = __copy_ref__output
@@ -329,13 +329,11 @@ onsuccess:
     import os
     import shutil
     import json
-
-    from sequana import logger
-    logger.level = "INFO"
-
+    from sequana.utils import config
     from sequana.modules_report.summary import SummaryModule
     from sequana.modules_report.summary import SummaryModule2
-    from sequana.utils import config as conf
+    from sequana import logger
+    logger.level = "INFO"
 
     # create summary pipeline for each samples
     report_dir_format = 'report_vc_{0}'
@@ -379,8 +377,7 @@ onsuccess:
             "rulegraph": __rulegraph__output,
             "stats": "stats.txt"}
 
-    from sequana.utils import config
-    config.output_dir = os.path.abspath(".")
+    conf.output_dir = os.path.abspath(".")
     s = SummaryModule2(data, intro=intro)
 
 
