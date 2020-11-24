@@ -329,7 +329,7 @@ onsuccess:
     import os
     import shutil
     import json
-    from sequana.utils import config
+    from sequana.utils import config as conf
     from sequana.modules_report.summary import SummaryModule
     from sequana.modules_report.summary import SummaryModule2
     from sequana import logger
