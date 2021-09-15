@@ -9,9 +9,9 @@
 # ============================================================================
 #
 # Mandatory fields
-input_directory: "%(input_directory)s"
-input_readtag: "%(input_readtag)s"
-input_pattern: "%(input_pattern)s"
+input_directory: 
+input_readtag: 
+input_pattern:
 annotation_file:
 reference_file:
 
@@ -40,7 +40,7 @@ sequencing:
 # - threads: number of threads to be used.
 # - tmp_directory: temporary directory
 #
-bwa_mem_ref:
+bwa_mem:
     index_algorithm: 'is'
     options: '-T 30'
     threads: 2
@@ -189,5 +189,8 @@ joint_freebayes_vcf_filter:
 # - config_file: by default, we use sequana RNA-seq multiqc_config file. 
 #       If you want your own multiqc, fill this entry
 multiqc:
-    options: "-p -f -m snpeff -m sequana_coverage"
+    options: -p -f 
+    modules:  snpeff sequana_coverage
+    input_directory: .
+    config_file: "multiqc_config.yaml"
 

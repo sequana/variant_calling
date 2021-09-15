@@ -6,8 +6,8 @@ from setuptools.command.install import install
 import subprocess
 
 _MAJOR               = 0
-_MINOR               = 9
-_MICRO               = 4
+_MINOR               = 10
+_MICRO               = 0
 
 version              = '%d.%d.%d' % (_MAJOR, _MINOR, _MICRO)
 release              = '%d.%d' % (_MAJOR, _MINOR)
@@ -21,8 +21,7 @@ metainfo = {
     'platforms' : ['Linux', 'Unix', 'MacOsX', 'Windows'],
     'keywords' : ['snakemake', "sequana", "NGS", "freebayes", "variant calling"],
     'classifiers' : [
-          'Development Status :: 4 - Beta',
-          #'Development Status :: 5 - Production/Stable',
+          'Development Status :: 5 - Production/Stable',
           'Intended Audience :: Education',
           'Intended Audience :: End Users/Desktop',
           'Intended Audience :: Developers',
@@ -70,8 +69,7 @@ setup(
     classifiers      = metainfo['classifiers'],
 
     # package installation
-    packages = ["sequana_pipelines.variant_calling", 
-        "sequana_pipelines.variant_calling.data"],
+    packages = ["sequana_pipelines.variant_calling"],
 
     install_requires = open("requirements.txt").read(),
 
@@ -85,7 +83,6 @@ setup(
     zip_safe=False,
 
     entry_points = {'console_scripts':[
-        'sequana_pipelines_variant_calling=sequana_pipelines.variant_calling.main:main',
         'sequana_variant_calling=sequana_pipelines.variant_calling.main:main']
     }
 
