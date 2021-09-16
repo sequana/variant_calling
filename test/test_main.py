@@ -46,10 +46,10 @@ def test_check_output():
              'chr': 'JB409847',
              'depth': 23,
              #'freebayes_score': 2.78452e-14,
-             'frequency': '0.26',
+             'frequency': '0.261',
              'position': '2221',
              'reference': 'C',
-             'strand_balance': '0.33'}
+             'strand_balance': '0.333'}
         
 
 

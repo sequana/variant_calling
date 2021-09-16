@@ -392,7 +392,8 @@ rule multiqc:
            options=config['multiqc']['options'],
            input_directory=config['multiqc']['input_directory'],
            config_file=config['multiqc']['config_file'],
-           modules=config["multiqc"]["modules"]
+           #modules=config["multiqc"]["modules"],  # if no snpeff and no coverage, we still want a report
+           modules=""
        log:
            "multiqc/multiqc.log"
        wrapper:
