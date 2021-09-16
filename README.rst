@@ -1,3 +1,15 @@
+
+.. image:: https://badge.fury.io/py/sequana-variant-calling.svg
+     :target: https://pypi.python.org/pypi/sequana_variant_calling
+
+.. image:: http://joss.theoj.org/papers/10.21105/joss.00352/status.svg
+    :target: http://joss.theoj.org/papers/10.21105/joss.00352
+    :alt: JOSS (journal of open source software) DOI
+
+.. image:: https://github.com/sequana/variant_calling/actions/workflows/main.yml/badge.svg
+   :target: https://github.com/sequana/variant_calling/actions/workflows    
+
+
 This is is the **variant_calling** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
 
 :Overview: Variant calling from FASTQ files
@@ -10,13 +22,13 @@ This is is the **variant_calling** pipeline from the `Sequana <https://sequana.r
 Installation
 ~~~~~~~~~~~~
 
-You must install Sequana first::
+You must install Sequana first (use --upgrade to get the latest version installed)::
 
-    pip install sequana
+    pip install sequana --upgrade
 
 Then, just install this package::
 
-    pip install sequana_variant_calling
+    pip install sequana_variant_calling --upgrade
 
 Usage
 ~~~~~
