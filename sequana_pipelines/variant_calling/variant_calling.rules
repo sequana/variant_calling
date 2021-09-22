@@ -462,10 +462,7 @@ onsuccess:
 
 onerror:
     from sequana_pipetools.errors import PipeError
-    p = PipeError("variant_Calling")
+    p = PipeError("variant_calling")
     p.status()
-
-
-
 
 

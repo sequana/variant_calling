@@ -99,6 +99,7 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.9.10    * Uses new sequana_pipetools and wrappers
 0.9.5     * fix typo in the onsuccess and update sequana requirements to use
             most up-to-date snakemake rules
 0.9.4     * fix typo related to the reference-file option new name not changed
