@@ -96,9 +96,10 @@ Finally, joint calling is also available and can be switch on if desired.
 Changelog
 ~~~~~~~~~
 
-========= ====================================================================
+========= ======================================================================
 Version   Description
-========= ====================================================================
+========= ======================================================================
+0.10.0    * fully integrated sequana wrappers and simplification of HTML reports
 0.9.10    * Uses new sequana_pipetools and wrappers
 0.9.5     * fix typo in the onsuccess and update sequana requirements to use
             most up-to-date snakemake rules
@@ -121,5 +122,5 @@ Version   Description
             --circular and --frebayes--ploidy
 0.9.1     * Fix input-readtag, which was not populated
 0.9.0     First release
-========= ====================================================================
+========= ======================================================================
 

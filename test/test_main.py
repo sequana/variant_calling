@@ -33,9 +33,8 @@ def test_check_output():
 
         subprocess.call("sh variant_calling.sh".split(), cwd=wk)
 
-
         from sequana.freebayes_vcf_filter import VCF_freebayes, Variant
-        vcf = VCF_freebayes(wk + "/report_vc_data/outputs/data.raw.vcf")
+        vcf = VCF_freebayes(wk + "/data/freebayes/data.raw.vcf")
         vcf.rewind()
         vv = [Variant(v)._resume for v in vcf]
         # this may change depending on the freebayes version...
@@ -46,11 +45,11 @@ def test_check_output():
              'chr': 'JB409847',
              'depth': 23,
              #'freebayes_score': 2.78452e-14,
+             'type': 'SNV',
              'frequency': '0.261',
              'position': '2221',
              'reference': 'C',
              'strand_balance': '0.333'}
-        
 
 
 def test_version():
