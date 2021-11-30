@@ -9,11 +9,11 @@
 # ============================================================================
 #
 # Mandatory fields
-input_directory: /home/cokelaer/Data/Hm2
+input_directory: 
 input_readtag: _R[12]_
 input_pattern: '*fastq.gz'
-annotation_file: /home/cokelaer/Data/Hm2/measles.gbk
-reference_file: /home/cokelaer/Data/Hm2/measles.fa
+annotation_file:
+reference_file:
 
 
 
