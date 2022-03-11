@@ -4,3 +4,4 @@
 - sambamba
 - samtools
 - snpEff
+- bamtools

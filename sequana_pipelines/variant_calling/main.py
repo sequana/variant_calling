@@ -124,14 +124,13 @@ def main(args=None):
                 logger.error("The annotation file must end with .gbk or .gff or .gff3. You provided {}".format(cfg.annotation_file))
                 sys.exit(1)
             cfg['sequana_coverage']['genbank_file'] = cfg.annotation_file
+        else:
+            cfg.snpeff.do = False
+            cfg['sequana_coverage']['genbank_file'] = ""
 
         cfg['sequana_coverage']['do'] = options.do_coverage
         cfg['sequana_coverage']["circular"] = options.circular
-
-
         cfg['joint_freebayes']['do'] = options.do_joint_calling
-    
-
         cfg['bwa_mem']['threads'] = options.threads
         cfg['freebayes']['ploidy'] = options.freebayes_ploidy
 
