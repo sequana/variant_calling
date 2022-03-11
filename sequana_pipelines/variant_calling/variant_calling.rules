@@ -33,7 +33,6 @@ configfile: "config.yaml"
 
 # A convenient manager
 manager = PipelineManager("variant_calling", config)
-manager.setup(globals(), mode="warning")
 
 config = manager.config
 
@@ -48,9 +47,8 @@ if len(manager.samples) == 1:
 
 
 # ================================================== Define outputs
+expected_output = []
 
-__freebayes__output = "{sample}/freebayes/{sample}.raw.vcf"
-expected_output += expand(__freebayes__output, sample=manager.samples)
 
 others = []
 if config['joint_freebayes']['do']:
@@ -227,8 +225,7 @@ if config["sequana_coverage"]["do"]:
     rule sequana_coverage:
         input: 
             bed="{sample}/samtools_depth/{sample}.bed",
-            fasta=reference_file,
-            gbk=annotation_file if config["snpeff"]["do"] else ""
+            fasta=reference_file
         output:
             "{sample}/sequana_coverage/sequana_coverage.html"
         params:
@@ -239,11 +236,11 @@ if config["sequana_coverage"]["do"]:
             gc_window_size=config["sequana_coverage"]["gc_window_size"],
             high_threshold=config["sequana_coverage"]["high_threshold"],
             low_threshold=config["sequana_coverage"]["low_threshold"],
-            mixture_models=config["sequana_coverage"]["mixture_models"]
+            mixture_models=config["sequana_coverage"]["mixture_models"],
+            gbk=annotation_file if config["snpeff"]["do"] else None
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/sequana_coverage"
 
-    #__sequana_coverage__report_dir = "{sample}/sequana_coverage"
     expected_output += expand("{sample}/sequana_coverage/sequana_coverage.html",
              sample=manager.samples)
 
@@ -274,7 +271,7 @@ if config["snpeff"]["do"]:
 
     rule snpeff:
         input:
-            vcf = __freebayes__output,
+            vcf = "{sample}/freebayes/{sample}.raw.vcf",
             ann = annotation_file
         output:
             html="{sample}/snpeff/{sample}.snpeff.html",
@@ -291,9 +288,13 @@ if config["snpeff"]["do"]:
     __freebayes_vcf_filter__input = "{sample}/snpeff/{sample}.ann.vcf"
     expected_output += expand("{sample}/snpeff/{sample}.ann.vcf", sample=manager.samples)
 else:
-    __freebayes_vcf_filter__input = __freebayes__output
+    __freebayes_vcf_filter__input = "{sample}/freebayes/{sample}.raw.vcf"
 
-# Freebayes filter
+expected_output += expand("{sample}/freebayes/{sample}.raw.vcf", sample=manager.samples)
+
+
+# ================================================================== Freebayes filter
+#
 #
 rule freebayes_vcf_filter:
     input:
