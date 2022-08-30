@@ -10,7 +10,7 @@
    :target: https://github.com/sequana/variant_calling/actions/workflows    
 
 
-This is is the **variant_calling** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
+This is the **variant_calling** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
 
 :Overview: Variant calling from FASTQ files
 :Input: FASTQ files from Illumina Sequencing instrument
@@ -22,13 +22,20 @@ This is is the **variant_calling** pipeline from the `Sequana <https://sequana.r
 Installation
 ~~~~~~~~~~~~
 
-You must install Sequana first (use --upgrade to get the latest version installed)::
-
-    pip install sequana --upgrade
-
-Then, just install this package::
+If you already have all requirements, you can install the packages using pip::
 
     pip install sequana_variant_calling --upgrade
+
+Otherwise, you can create a *sequana_variant_calling* conda environment executing::
+
+    conda env create -f environment.yml
+
+and later activate the environment::
+
+  conda activate sequana_variant_calling
+
+A third option is to install the pipeline with pip method (see above) and use singularity as explained afterwards.
+
 
 Usage
 ~~~~~
@@ -37,19 +44,40 @@ Usage
 
     sequana_variant_calling --help
     sequana_variant_calling --input-directory DATAPATH --reference-file measles.fa
-    sequana_variant_calling --input-directory DATAPATH --reference-file measles.fa
 
 This creates a directory **variant_calling**. You just need to execute the pipeline::
 
     cd variant_calling
     sh variant_calling.sh
 
-This launch a snakemake pipeline. If you are familiar with snakemake, you can 
+This launch a snakemake pipeline. If you are familiar with snakemake, you can
 retrieve the pipeline itself and its configuration files and then execute the pipeline yourself with specific parameters::
 
     snakemake -s variant_calling.rules -c config.yaml --cores 4 --stats stats.txt
 
-Or use `sequanix <https://sequana.readthedocs.io/en/master/sequanix.html>`_ interface.
+Or use `sequanix <https://sequana.readthedocs.io/en/main/sequanix.html>`_ interface.
+
+Usage with singularity::
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With singularity, initiate the working directory as follows::
+
+    sequana_variant_calling --use-singularity
+
+Images are downloaded in the working directory but you can store then in a directory globally (e.g.)::
+
+    sequana_variant_calling --use-singularity --singularity-prefix ~/.sequana/apptainers
+
+and then::
+
+    cd variant_calling
+    sh variant_calling.sh
+
+if you decide to use snakemake manually, do not forget to add singularity options::
+
+    snakemake -s variant_calling.rules -c config.yaml --cores 4 --stats stats.txt --use-singularity --singularity-prefix ~/.sequana/apptainers --singularity-args "-B /home:/home"
+
+    
 
 Requirements
 ~~~~~~~~~~~~
@@ -63,7 +91,7 @@ This pipelines requires the following executable(s):
 - samtools
 - snpEff
 
-.. image:: https://raw.githubusercontent.com/sequana/sequana_variant_calling/master/sequana_pipelines/variant_calling/dag.png
+.. image:: https://raw.githubusercontent.com/sequana/sequana_variant_calling/main/sequana_pipelines/variant_calling/dag.png
 
 Details
 ~~~~~~~~
@@ -99,6 +127,7 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+0.11.0    * Add singularity containers
 0.10.0    * fully integrated sequana wrappers and simplification of HTML reports
 0.9.10    * Uses new sequana_pipetools and wrappers
 0.9.5     * fix typo in the onsuccess and update sequana requirements to use
@@ -123,4 +152,11 @@ Version   Description
 0.9.1     * Fix input-readtag, which was not populated
 0.9.0     First release
 ========= ======================================================================
+
+Contribute & Code of Conduct
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To contribute to this project, please take a look at the 
+`Contributing Guidelines <https://github.com/sequana/sequana/blob/maib/CONTRIBUTING.rst>`_ first. Please note that this project is released with a 
+`Code of Conduct <https://github.com/sequana/sequana/blob/main/CONDUCT.md>`_. By contributing to this project, you agree to abide by its terms.
 

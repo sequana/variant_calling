@@ -1,0 +1,20 @@
+name: sequana_variant_calling
+
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - freebayes
+  - bwa
+  - snpeff==5.0
+  - sambamba
+  - picard
+  - samtools
+  - bamtools
+  - pip
+  - pip:
+    - sequana
+
+

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # License: 3-clause BSD
 from setuptools import setup, find_namespace_packages
 from setuptools.command.develop import develop
@@ -6,7 +5,7 @@ from setuptools.command.install import install
 import subprocess
 
 _MAJOR               = 0
-_MINOR               = 10
+_MINOR               = 11
 _MICRO               = 0
 
 version              = '%d.%d.%d' % (_MAJOR, _MINOR, _MICRO)
@@ -28,8 +27,9 @@ metainfo = {
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Operating System :: OS Independent',
-          'Programming Language :: Python :: 3.5',
-          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
+          'Programming Language :: Python :: 3.9',
           'Topic :: Software Development :: Libraries :: Python Modules',
           'Topic :: Scientific/Engineering :: Bio-Informatics',
           'Topic :: Scientific/Engineering :: Information Analysis',
@@ -39,19 +39,6 @@ metainfo = {
 
 NAME = "variant_calling"
 
-class Install(install):
-    def run(self):
-        cmd = "sequana_completion --name {} --force ".format(NAME)
-        try: subprocess.run(cmd.split())
-        except:pass
-        install.run(self)
-
-class Develop(develop):
-    def run(self):
-        cmd = "sequana_completion --name {} --force ".format(NAME)
-        try:subprocess.run(cmd.split())
-        except:pass
-        develop.run(self)
 
 setup(
     name             = "sequana_{}".format(NAME),

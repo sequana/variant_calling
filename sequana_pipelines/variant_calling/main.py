@@ -13,6 +13,7 @@
 import sys
 import os
 import argparse
+import subprocess
 
 from sequana_pipetools.options import *
 from sequana_pipetools.options import before_pipeline
@@ -74,6 +75,9 @@ class Options(argparse.ArgumentParser):
 
         pipeline_group.add_argument("--create-bigwig", action="store_true",
             help="create the bigwig files from the BAM files" )
+
+        self.add_argument("--run", default=False, action="store_true",
+            help="execute the pipeline directly")
 
     def parse_args(self, *args):
         args_list = list(*args)
@@ -144,6 +148,8 @@ def main(args=None):
     # file and save it.
     manager.teardown()
 
+    if options.run:
+        subprocess.Popen(["sh", '{}.sh'.format(NAME)], cwd=options.workdir)
 
 if __name__ == "__main__":
     main()
