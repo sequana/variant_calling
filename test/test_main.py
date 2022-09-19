@@ -41,6 +41,8 @@ def test_check_output_ref_annot():
         assert len(vv) == pytest.approx(65, .1)
         vv = vv[0].copy()
         del vv['freebayes_score']
+        del vv['fisher_pvalue']
+
         assert vv == {'alternative': 'T',
              'chr': 'JB409847',
              'depth': 23,
@@ -77,6 +79,7 @@ def test_check_output_no_annotation():
         assert len(vv) == pytest.approx(65, .1)
         vv = vv[0].copy()
         del vv['freebayes_score']
+        del vv['fisher_pvalue']
         assert vv == {'alternative': 'T',
              'chr': 'JB409847',
              'depth': 23,
