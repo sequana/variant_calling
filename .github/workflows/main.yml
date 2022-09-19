@@ -41,14 +41,14 @@ jobs:
 
     - name: conda
       run: |
-        conda install -c conda-forge  -c bioconda --quiet -y python=${{ matrix.python }} 'freebayes>1' bwa snpeff==5.0 sambamba picard 'samtools>=1.15' bamtools
+        conda install -c conda-forge  -c bioconda --quiet -y python=${{ matrix.python }} 'freebayes>1' bwa snpeff==5.0 sambamba 'picard>2.26' 'samtools>=1.15' bamtools
         conda install -c conda-forge -y ncurses
         pip3 install --upgrade requests
 
 
     - name: Install dependencies
       run: |
-        pip install coveralls pytest-cov pytest pytest-xdist
+        pip install .[testing]
 
     - name: install package itself
       run: |
