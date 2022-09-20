@@ -197,8 +197,7 @@ if config["sambamba_filter"]["do"]:
         output:
             "{sample}/sambamba_filter/{sample}.filter.sorted.bam"
         log:
-            out="{sample}/sambamba_filter/{sample}_sambamba_filter.out",
-            err="{sample}/sambamba_filter/{sample}_sambamba_filter.err"
+            "{sample}/sambamba_filter/{sample}_sambamba_filter.log",
         params:
             threshold=config["sambamba_filter"]["threshold"],
             options=config["sambamba_filter"]["options"]
