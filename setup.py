@@ -51,6 +51,7 @@ setup(
     keywords         = metainfo['keywords'],
     description      = metainfo['description'],
     license          = metainfo['license'],
+    long_description_content_type = "text/x-rst",
     platforms        = metainfo['platforms'],
     url              = metainfo['url'],
     classifiers      = metainfo['classifiers'],
@@ -59,7 +60,17 @@ setup(
     packages = ["sequana_pipelines.variant_calling"],
 
     install_requires = open("requirements.txt").read(),
-
+    extras_require={
+        "testing": [
+            "pytest",
+            "pytest-cov",
+            "pytest-xdist",
+            "pytest-mock",
+            "pytest-timeout",
+            "pytest-runner",
+            "coveralls",
+        ],
+    },
     # This is recursive include of data files
     exclude_package_data = {"": ["__pycache__"]},
     package_data = {
