@@ -53,6 +53,6 @@ jobs:
 
     - name: testing
       run: |
-        sequana_variant_calling --input-directory test/data/ --use-singularity  --reference-file test/data/JB409847.fasta && cd variant_calling && sh variant_calling
+        sequana_variant_calling --input-directory test/data/ --use-singularity  --reference-file test/data/JB409847.fasta && cd variant_calling && sh variant_calling.sh
 
 
