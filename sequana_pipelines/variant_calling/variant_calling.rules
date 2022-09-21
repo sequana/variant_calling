@@ -79,7 +79,7 @@ if config["snpeff"]["do"]:
             new_reference
         log:
             "common_logs/snpeff_add_locus_in_fasta.log"
-            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.2.img"
+            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.3.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/snpeff_add_locus_in_fasta"
 
@@ -116,7 +116,7 @@ if not config["input_pattern"].endswith("bam"):
             options="",
             index_algorithm="is"
         container:
-            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
         threads: 2
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/bwa/build"
@@ -136,7 +136,7 @@ if not config["input_pattern"].endswith("bam"):
             options=config["bwa_mem"]["options"],
             tmp_directory=config["bwa_mem"]["tmp_directory"]
         container:
-            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
         threads: 2
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/bwa/align"
@@ -156,7 +156,7 @@ rule add_read_group:
         options=config["add_read_group"]["options"],
         SM="{sample}"
     container:
-         "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+         "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
     wrapper:
         f"{sequana_wrapper_branch}/wrappers/add_read_group"
 
@@ -176,7 +176,7 @@ if config["sambamba_markdup"]["do"]:
             tmp_directory=config["sambamba_markdup"]["tmp_directory"],
             remove_duplicates=config["sambamba_markdup"]["remove_duplicates"]
         container:
-            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/sambamba_markdup"
 
@@ -202,7 +202,7 @@ if config["sambamba_filter"]["do"]:
             threshold=config["sambamba_filter"]["threshold"],
             options=config["sambamba_filter"]["options"]
         container:
-            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/sambamba_filter"
 
@@ -223,7 +223,7 @@ if config["sequana_coverage"]["do"]:
         log:
             "{sample}/samtools_depth/{sample}.log"
         container:
-            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/samtools_depth"
 
@@ -275,7 +275,7 @@ rule freebayes:
         ploidy=config["freebayes"]["ploidy"],
         options=config["freebayes"]["options"]
     container:
-        "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+        "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
     wrapper:
         f"{sequana_wrapper_branch}/wrappers/freebayes"
 
@@ -297,7 +297,7 @@ if config["snpeff"]["do"]:
         params:
             options=config["snpeff"]["options"]
         container:
-            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/snpeff"
 
@@ -323,7 +323,7 @@ rule freebayes_vcf_filter:
     params:
         filter_dict=config["freebayes_vcf_filter"]
     container:
-        "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+        "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
     wrapper:
         f"{sequana_wrapper_branch}/wrappers/freebayes_vcf_filter"
 
@@ -345,7 +345,7 @@ if config["joint_freebayes"]["do"]:
             ploidy=config["freebayes"]["ploidy"],
             options=config["joint_freebayes"]["options"]
         container:
-            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/freebayes"
 
@@ -365,7 +365,7 @@ if config["joint_freebayes"]["do"]:
             params:
                 options=config["snpeff"]["options"]
             container:
-                "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+                "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
             wrapper:
                 f"{sequana_wrapper_branch}/wrappers/snpeff"
 
@@ -386,7 +386,7 @@ if config["joint_freebayes"]["do"]:
             filter_dict=config["freebayes_vcf_filter"],
             report_dir="joint_calling"
         container:
-            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.2.img"
+            "https://zenodo.org/record/7031863/files/sequana_tools_0.14.3.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/freebayes_vcf_filter"
     expected_output+=["joint_calling/variant_calling.html"]
