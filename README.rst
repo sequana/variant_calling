@@ -8,6 +8,10 @@
 
 .. image:: https://github.com/sequana/variant_calling/actions/workflows/main.yml/badge.svg
    :target: https://github.com/sequana/variant_calling/actions/workflows    
+   
+   
+.. image:: https://github.com/sequana/variant_calling/actions/workflows/sing.yml/badge.svg
+   :target: https://github.com/sequana/variant_calling/actions/workflows    
 
 
 This is the **variant_calling** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
