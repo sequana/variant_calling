@@ -19,6 +19,9 @@ mapping:
         type: str
         required: True
 
+    "apptainers":
+        type: any
+
     "bwa_mem":
         type: map
         mapping:
@@ -61,6 +64,8 @@ mapping:
         mapping:
             "do":
                 type: bool
+            "build_options":
+                type: str
             "options":
                 type: str
 
