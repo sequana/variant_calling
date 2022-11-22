@@ -15,7 +15,8 @@ input_pattern: '*fastq.gz'
 annotation_file:
 reference_file:
 
-
+apptainers:
+    sequana_tools:  https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
 
 
 # you may add ID, PF, SM, PU, LB read tags
@@ -63,7 +64,8 @@ bwa_mem:
 #
 snpeff:
     do: true
-    options: -no-downstream -no-upstream
+    build_options: # -noCheckCds -noCheckProtein
+    options: -no-downstream -no-upstream 
 
 ##############################################################################
 # Freebayes - Variant caller
@@ -85,7 +87,7 @@ freebayes:
 # - options: any options recognised by freebayes.
 # - Note that ploidy is the one from the 'freebayes' section
 joint_freebayes:
-    do: true
+    do: false
     options: ''
 
 ##############################################################################
@@ -155,7 +157,7 @@ sequana_coverage:
 #
 freebayes_vcf_filter:
     freebayes_score: 20
-    frequency: 0.7
+    frequency: 0.1
     min_depth: 10
     forward_depth: 3
     reverse_depth: 3

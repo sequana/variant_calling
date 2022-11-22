@@ -131,7 +131,8 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
-0.11.1    * Updae rule sambamba to use latest wrappers
+0.12.0    * set all apptainers containers and add vcf to bcf conversions
+          * Update rule sambamba to use latest wrappers
 0.11.0    * Add singularity containers
 0.10.0    * fully integrated sequana wrappers and simplification of HTML reports
 0.9.10    * Uses new sequana_pipetools and wrappers
