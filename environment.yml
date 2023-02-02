@@ -6,12 +6,12 @@ channels:
   - defaults
 
 dependencies:
-  - freebayes
+  - freebayes>1
   - bwa
   - snpeff==5.0
   - sambamba
-  - picard
-  - samtools
+  - picard>2.26
+  - samtools>=1.15
   - bamtools
   - pip
   - pip:
