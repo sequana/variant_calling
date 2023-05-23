@@ -16,7 +16,8 @@ annotation_file:
 reference_file:
 
 apptainers:
-    sequana_tools:  https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
+    sequana_tools: "https://zenodo.org/record/7963917/files/sequana_tools_0.15.1.img"
+    graphviz: "https://zenodo.org/record/7928262/files/graphviz_7.0.5.img"
 
 
 # you may add ID, PF, SM, PU, LB read tags

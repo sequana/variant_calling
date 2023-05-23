@@ -467,8 +467,20 @@ rule stats:
 
 
 # ======================================================================================== multiqc
-sequana_multiqc_input = expected_output
-include: sm.modules["multiqc/2.0"]
+rule multiqc:
+    input:
+        expected_output
+    output:
+       "multiqc/multiqc_report.html"
+    params:
+        options=config["multiqc"]["options"],
+        input_directory=config['multiqc']['input_directory'],
+        config_file=config['multiqc']['config_file'],
+        modules=config['multiqc']['modules']
+    log:
+        "multiqc/multiqc.log"
+    wrapper:
+       f"{sequana_wrapper_branch}/wrappers/multiqc"
 
 
 # ======================================================================================== rulegraph
@@ -476,7 +488,30 @@ sequana_rulegraph_mapper = {}
 if config["joint_freebayes"]["do"]:
     sequana_rulegraph_mapper["joint_freebayes"] = "../joint_calling/variant_calling.html"
 
-include: sm.modules["rulegraph"]
+
+
+# ========================================================== rulegraph
+rule rulegraph:
+    input: str(manager.snakefile)
+    output:
+        svg = "rulegraph/rulegraph.dot"
+    params:
+        mapper = {"multiqc": "../multiqc/multiqc_report.html"},
+        configname = "config.yaml"
+    wrapper:
+        f"{sequana_wrapper_branch}/wrappers/rulegraph"
+
+
+rule dot2svg:
+    input:
+        "rulegraph/rulegraph.dot"
+    output:
+        ".sequana/rulegraph.svg"
+    container:
+        config['apptainers']['graphviz']
+    shell:
+        """dot -Tsvg {input} -o {output}"""
+
 
 localrules: rulegraph, multiqc, stats
 

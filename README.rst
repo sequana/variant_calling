@@ -7,12 +7,11 @@
     :alt: JOSS (journal of open source software) DOI
 
 .. image:: https://github.com/sequana/variant_calling/actions/workflows/main.yml/badge.svg
-   :target: https://github.com/sequana/variant_calling/actions/workflows    
-   
-   
-.. image:: https://github.com/sequana/variant_calling/actions/workflows/sing.yml/badge.svg
-   :target: https://github.com/sequana/variant_calling/actions/workflows    
+   :target: https://github.com/sequana/variant_calling/actions/workflows
 
+.. image:: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C3.10-blue.svg
+    :target: https://pypi.python.org/pypi/sequana
+    :alt: Python 3.8 | 3.9 | 3.10
 
 This is the **variant_calling** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
 
@@ -93,7 +92,7 @@ This pipelines requires the following executable(s):
 - picard (picard-tools)
 - sambamba
 - samtools
-- snpEff
+- snpEff you will need 5.0 or 5.1d (note the d); 5.1 does not work.
 
 .. image:: https://raw.githubusercontent.com/sequana/sequana_variant_calling/main/sequana_pipelines/variant_calling/dag.png
 
