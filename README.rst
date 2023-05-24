@@ -130,6 +130,7 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.0.0     * use last warppers and graphviz apptainer
 0.12.0    * set all apptainers containers and add vcf to bcf conversions
           * Update rule sambamba to use latest wrappers
 0.11.0    * Add singularity containers
