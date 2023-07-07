@@ -130,6 +130,8 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.0.1     * automatically fill the bwa index algorithm and fix bwa_index rule to 
+            use the options in the config file (not the harcoded one)
 1.0.0     * use last warppers and graphviz apptainer
 0.12.0    * set all apptainers containers and add vcf to bcf conversions
           * Update rule sambamba to use latest wrappers
