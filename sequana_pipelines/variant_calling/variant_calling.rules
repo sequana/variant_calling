@@ -116,8 +116,8 @@ if not config["input_pattern"].endswith("bam"):
         log:
             "reference/build.log"
         params:
-            options="",
-            index_algorithm="is"
+            options=config['bwa_mem'].get('index_options', ""),
+            index_algorithm=config['bwa_mem'].get('index_algorithm', "is")
         container:
             config['apptainers']['sequana_tools']
         threads: 2

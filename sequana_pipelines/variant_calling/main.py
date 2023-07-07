@@ -63,11 +63,11 @@ class Options(argparse.ArgumentParser):
             help="The annotation for snpeff"
         )
         pipeline_group.add_argument("--threads", dest="threads", default=4, type=int)
-        pipeline_group.add_argument("--do-coverage", dest="do_coverage", 
-            action="store_true", 
+        pipeline_group.add_argument("--do-coverage", dest="do_coverage",
+            action="store_true",
             help="perform the coverage analysis using sequana_coverage")
-        pipeline_group.add_argument("--do-joint-calling", dest="do_joint_calling", 
-            action="store_true", 
+        pipeline_group.add_argument("--do-joint-calling", dest="do_joint_calling",
+            action="store_true",
             help="do the joint calling analysise")
 
         pipeline_group.add_argument("-o", "--circular", action="store_true")
@@ -136,12 +136,24 @@ def main(args=None):
         cfg['sequana_coverage']["circular"] = options.circular
         cfg['joint_freebayes']['do'] = options.do_joint_calling
         cfg['bwa_mem']['threads'] = options.threads
+
+
         cfg['freebayes']['ploidy'] = options.freebayes_ploidy
 
         cfg.reference_file = os.path.abspath(options.reference)
         manager.exists(cfg.reference_file)
 
-        # coverage
+        # Given the reference, let us compute its length and st the index algorithm
+        from sequana import FastA
+        f = FastA(options.reference)
+        N = f.get_stats()['total_length']
+
+        # seems to be a hardcoded values in bwa according to the documentation
+        if N >= 2000000000:
+            cfg['bwa_mem']['index_algorithm'] = "bwtsw"
+        else:
+            cfg['bwa_mem']['index_algorithm'] = "is"
+
 
 
     # finalise the command and save it; copy the snakemake. update the config
