@@ -29,12 +29,28 @@ add_read_group:
 
 
 ##############################################################################
+# samtools_depth
+#
+# :Parameters:
+#
+# - max_depth: by default max depth is 20,000 but can be changed here
+samtools_depth:
+    max_depth: 20000
+
+
+##############################################################################
 # BWA - Mapping
 #
 # :Parameters:
 #
 # - reference_file: the name of the reference file.
 # - index_algorithm: the BWA index algorithm (is or bwtsw).
+#     is:	IS linear-time algorithm for constructing suffix array. It requires 
+#           5.37N memory where N is the size of the database. IS is moderately fast, but 
+#           does not work with database larger than 2GB. IS is the default algorithm due 
+#           to its simplicity. The current codes for IS algorithm are reimplemented by Yuta Mori.
+#     bwtsw	Algorithm implemented in BWT-SW. This method works with the whole human genome, 
+#           but it does not work with database smaller than 10MB and it is usually slower than IS.
 # - options: any options recognised by BWA MEM tool.
 # - threads: number of threads to be used.
 # - tmp_directory: temporary directory

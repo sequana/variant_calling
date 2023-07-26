@@ -54,10 +54,12 @@ if config['joint_freebayes']['do']:
     others += ["joint_calling/variant_calling.html"]
 
 
+if config["snpeff"]['do'] and config["sequana_coverage"]["do"]:
+    others += ["multiqc/multiqc_report.html"]
+
 rule all:
     input:
         ".sequana/rulegraph.svg",
-        "multiqc/multiqc_report.html",
         "outputs/stats.csv",
         others
 
@@ -225,6 +227,9 @@ if config["sequana_coverage"]["do"]:
             "{sample}/samtools_depth/{sample}.bed"
         log:
             "{sample}/samtools_depth/{sample}.log"
+        params:
+            # change -m to higher value would you have a large coverage
+            options="-m " + config['samtools_depth'].get("max_depth", 20000)
         container:
             config['apptainers']['sequana_tools']
         wrapper:
@@ -467,20 +472,22 @@ rule stats:
 
 
 # ======================================================================================== multiqc
-rule multiqc:
-    input:
-        expected_output
-    output:
-       "multiqc/multiqc_report.html"
-    params:
-        options=config["multiqc"]["options"],
-        input_directory=config['multiqc']['input_directory'],
-        config_file=config['multiqc']['config_file'],
-        modules=config['multiqc']['modules']
-    log:
-        "multiqc/multiqc.log"
-    wrapper:
-       f"{sequana_wrapper_branch}/wrappers/multiqc"
+#
+if config["snpeff"]['do'] and config["sequana_coverage"]["do"]:
+    rule multiqc:
+        input:
+            expected_output
+        output:
+           "multiqc/multiqc_report.html"
+        params:
+            options=config["multiqc"]["options"],
+            input_directory=config['multiqc']['input_directory'],
+            config_file=config['multiqc']['config_file'],
+            modules=config['multiqc']['modules']
+        log:
+            "multiqc/multiqc.log"
+        wrapper:
+           f"{sequana_wrapper_branch}/wrappers/multiqc"
 
 
 # ======================================================================================== rulegraph
