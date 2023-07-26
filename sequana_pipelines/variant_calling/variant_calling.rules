@@ -54,7 +54,7 @@ if config['joint_freebayes']['do']:
     others += ["joint_calling/variant_calling.html"]
 
 
-if config["snpeff"]['do'] and config["sequana_coverage"]["do"]:
+if config["snpeff"]['do'] or config["sequana_coverage"]["do"]:
     others += ["multiqc/multiqc_report.html"]
 
 rule all:
@@ -220,6 +220,20 @@ if config["sambamba_filter"]["do"]:
 # ========================================================= sequana_coverage analysis
 if config["sequana_coverage"]["do"]:
 
+    rule bedtools_depth:
+        input:
+            __samtools_depth__input
+        output:
+            "{sample}/bedtools_depth/{sample}.bed"
+        log:
+            "{sample}/bedtools_depth/{sample}.log"
+        container:
+            config['apptainers']['sequana_tools']
+        shell:
+            """
+            bedtools genomecov -d -ibam {input} > {output}
+            """
+
     rule samtools_depth:
         input:
             __samtools_depth__input
@@ -229,17 +243,33 @@ if config["sequana_coverage"]["do"]:
             "{sample}/samtools_depth/{sample}.log"
         params:
             # change -m to higher value would you have a large coverage
-            options="-m " + config['samtools_depth'].get("max_depth", 20000)
+            options="-m " + str(config['samtools_depth'].get("max_depth", 20000))
         container:
             config['apptainers']['sequana_tools']
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/samtools_depth"
 
 
+    rule double_bed:
+        input:
+            bed1="{sample}/samtools_depth/{sample}.bed",
+            bed2="{sample}/bedtools_depth/{sample}.bed"
+        output:
+            "{sample}/double_bed/{sample}.bed"
+        run:
+            with open(input.bed1) as fin1, open(input.bed2) as fin2, open(output[0], "w") as fout:
+                for line1, line2 in zip(fin1, fin2):
+                    name1, pos1, count1 = line1.split()
+                    name2, pos2, count2 = line2.split()
+                    assert name1==name2
+                    assert pos1==pos2
+                    fout.write(f"{name1}\t{pos1}\t{count1}\t{count2}\n")
+
+
 
     def get_sequana_coverage_input(config):
         input_file = {
-            "bed": "{sample}/samtools_depth/{sample}.bed",
+            "bed": "{sample}/double_bed/{sample}.bed",
             "fasta": reference_file
         }
         return input_file
@@ -473,7 +503,7 @@ rule stats:
 
 # ======================================================================================== multiqc
 #
-if config["snpeff"]['do'] and config["sequana_coverage"]["do"]:
+if config["snpeff"]['do'] or config["sequana_coverage"]["do"]:
     rule multiqc:
         input:
             expected_output
