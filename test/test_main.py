@@ -1,6 +1,8 @@
 import os
 import tempfile
 import subprocess
+from sequana_pipelines.variant_calling.main import main
+from click.testing import CliRunner
 
 import pytest
 
@@ -14,10 +16,24 @@ annotation = sharedir + os.sep + "JB409847.gbk"
 def test_standalone_subprocess():
     directory = tempfile.TemporaryDirectory()
     cmd = "sequana_variant_calling --input-directory {} "
-    cmd += "--working-directory {} --run-mode local --force --annotation-file {} "
+    cmd += "--working-directory {}  --force --annotation-file {} "
     cmd += " --reference-file {}"
     cmd = cmd.format(sharedir, directory.name, annotation, reference)
     subprocess.call(cmd.split())
+
+
+
+def test_standalone_script():
+
+    wk = tempfile.TemporaryDirectory()
+    runner = CliRunner()
+    results = runner.invoke(main,
+        ["--input-directory", sharedir, "--working-directory", wk.name, "--force", 
+            "--annotation-file", annotation,
+            "--reference-file", reference])
+    assert results.exit_code == 0
+
+
 
 
 def test_check_output_ref_annot():
@@ -25,7 +41,7 @@ def test_check_output_ref_annot():
     with tempfile.TemporaryDirectory() as wk:
 
         cmd = "sequana_variant_calling --input-directory {} "
-        cmd += "--working-directory {} --run-mode local --force --annotation-file {} "
+        cmd += "--working-directory {}  --force --annotation-file {} "
         cmd += " --reference-file {}"
         cmd = cmd.format(sharedir, wk, annotation, reference)
         # create the wokring directory and script
@@ -63,7 +79,7 @@ def test_check_output_no_annotation():
     with tempfile.TemporaryDirectory() as wk:
 
         cmd = "sequana_variant_calling --input-directory {} "
-        cmd += "--working-directory {} --run-mode local --force "
+        cmd += "--working-directory {}  --force "
         cmd += " --reference-file {}"
         cmd = cmd.format(sharedir, wk, reference)
         # create the wokring directory and script
