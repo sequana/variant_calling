@@ -8,8 +8,11 @@
 # use it, otherwise use input_samples.
 # ============================================================================
 #
+sequana_wrappers: "v23.11.28"
+
+
 # Mandatory fields
-input_directory: 
+input_directory:
 input_readtag: _R[12]_
 input_pattern: '*fastq.gz'
 annotation_file:
@@ -18,6 +21,7 @@ reference_file:
 apptainers:
     sequana_tools: "https://zenodo.org/record/7963917/files/sequana_tools_0.15.1.img"
     graphviz: "https://zenodo.org/record/7928262/files/graphviz_7.0.5.img"
+    multiqc: "https://zenodo.org/record/10205070/files/multiqc_1.16.0.img"
 
 
 # you may add ID, PF, SM, PU, LB read tags
@@ -36,6 +40,8 @@ add_read_group:
 # - max_depth: by default max depth is 20,000 but can be changed here
 samtools_depth:
     max_depth: 20000
+    resources:
+        mem: 8G
 
 
 ##############################################################################
@@ -60,6 +66,8 @@ bwa_mem:
     options: -T 30
     threads: 4
     tmp_directory: ./tmp/
+    resources:
+        mem: 8G
 
 ##############################################################################
 # SnpEff - Annotate variants detected
@@ -95,6 +103,8 @@ snpeff:
 freebayes:
     ploidy: 1
     options: --legacy-gls
+    resources:
+        mem: 8G
 
 ##############################################################################
 # Joint Freebayes - Variant caller
@@ -106,6 +116,8 @@ freebayes:
 joint_freebayes:
     do: false
     options: ''
+    resources:
+        mem: 8G
 
 ##############################################################################
 # Sambamba - Marks or removes duplicates
@@ -159,6 +171,8 @@ sequana_coverage:
     low_threshold: -4.0
     mixture_models: 2
     genbank_file: # filled automatically at setup but deprecated
+    resources: 
+        mem: 8G
 
 ##############################################################################
 # Filter VCF

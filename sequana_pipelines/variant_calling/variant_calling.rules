@@ -35,10 +35,6 @@ configfile: "config.yaml"
 manager = PipelineManager("variant_calling", config)
 
 
-
-# for development when testing sequana-wrappers. DO NOT change
-sequana_wrapper_branch = "main"
-
 # ================================================= some sanity checks
 # if there are more than one sample lets do a joint calling with all samples
 if len(manager.samples) == 1:
@@ -86,7 +82,7 @@ if config["snpeff"]["do"]:
         container:
             config['apptainers']['sequana_tools']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/snpeff_add_locus_in_fasta"
+            f"{manager.wrappers}/wrappers/snpeff_add_locus_in_fasta"
 
 # Copy the reference index if it exists
 elif not os.path.isfile(reference_file + ".fai"):
@@ -124,7 +120,7 @@ if not config["input_pattern"].endswith("bam"):
             config['apptainers']['sequana_tools']
         threads: 2
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/bwa/build"
+            f"{manager.wrappers}/wrappers/bwa/build"
 
     # ========================================================= bwa mapping
     rule bwa:
@@ -144,7 +140,7 @@ if not config["input_pattern"].endswith("bam"):
             config['apptainers']['sequana_tools']
         threads: 2
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/bwa/align"
+            f"{manager.wrappers}/wrappers/bwa/align"
 
 
 # ========================================================= add read group
@@ -163,7 +159,7 @@ rule add_read_group:
     container:
         config['apptainers']['sequana_tools']
     wrapper:
-        f"{sequana_wrapper_branch}/wrappers/add_read_group"
+        f"{manager.wrappers}/wrappers/add_read_group"
 
 
 
@@ -183,7 +179,7 @@ if config["sambamba_markdup"]["do"]:
         container:
             config['apptainers']['sequana_tools']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/sambamba_markdup"
+            f"{manager.wrappers}/wrappers/sambamba_markdup"
 
     __sambamba_filter__input = "{sample}/sambamba_markdup/{sample}.sorted.bam"
     __freebayes__input       = "{sample}/sambamba_markdup/{sample}.sorted.bam"
@@ -209,7 +205,7 @@ if config["sambamba_filter"]["do"]:
         container:
             config['apptainers']['sequana_tools']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/sambamba_filter"
+            f"{manager.wrappers}/wrappers/sambamba_filter"
 
     __freebayes__input = "{sample}/sambamba_filter/{sample}.filter.sorted.bam"
     __samtools_depth__input = [
@@ -227,6 +223,8 @@ if config["sequana_coverage"]["do"]:
             "{sample}/bedtools_depth/{sample}.bed"
         log:
             "{sample}/bedtools_depth/{sample}.log"
+        resources:
+            **config["sequana_coverage"]["resources"]
         container:
             config['apptainers']['sequana_tools']
         shell:
@@ -244,10 +242,12 @@ if config["sequana_coverage"]["do"]:
         params:
             # change -m to higher value would you have a large coverage
             options="-m " + str(config['samtools_depth'].get("max_depth", 20000))
+        resources:
+            **config["samtools_depth"]["resources"]
         container:
             config['apptainers']['sequana_tools']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/samtools_depth"
+            f"{manager.wrappers}/wrappers/samtools_depth"
 
 
     rule double_bed:
@@ -272,6 +272,9 @@ if config["sequana_coverage"]["do"]:
             "bed": "{sample}/double_bed/{sample}.bed",
             "fasta": reference_file
         }
+        if config["general"]["annotation_file"]:
+            input_file['gbk'] = config["general"]["annotation_file"]
+
         return input_file
 
     rule sequana_coverage:
@@ -280,17 +283,25 @@ if config["sequana_coverage"]["do"]:
         output:
             "{sample}/sequana_coverage/sequana_coverage.html"
         params:
+            annotation=config["general"]["annotation_file"],
             circular=config["sequana_coverage"]["circular"],
-            window_size=config["sequana_coverage"]["window_size"],
             chunksize=config["sequana_coverage"]["chunksize"],
             double_threshold=config["sequana_coverage"]["double_threshold"],
             gc_window_size=config["sequana_coverage"]["gc_window_size"],
             high_threshold=config["sequana_coverage"]["high_threshold"],
             low_threshold=config["sequana_coverage"]["low_threshold"],
             mixture_models=config["sequana_coverage"]["mixture_models"],
-            gbk=annotation_file if config["snpeff"]["do"] else None
+            otpions=config["sequana_coverage"]["options"],
+            gbk=annotation_file if config["snpeff"]["do"] else None,
+            window_size=config["sequana_coverage"]["window_size"],
+        log:
+            "logs/sequana_coverage/{sample}_sequana_coverage.log"
+        resources:
+            **config["sequana_coverage"]["resources"]
+        container:
+            config["apptainers"]["sequana_coverage"]
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/sequana_coverage"
+            f"{manager.wrappers}/wrappers/sequana_coverage"
 
     expected_output += expand("{sample}/sequana_coverage/sequana_coverage.html",
              sample=manager.samples)
@@ -312,10 +323,12 @@ rule freebayes:
     params:
         ploidy=config["freebayes"]["ploidy"],
         options=config["freebayes"]["options"]
+    resources:
+        **config["freebayes"]["resources"]
     container:
         config['apptainers']['sequana_tools']
     wrapper:
-        f"{sequana_wrapper_branch}/wrappers/freebayes"
+        f"{manager.wrappers}/wrappers/freebayes"
 
 
 # =========================================================== annotation snpeff
@@ -337,7 +350,7 @@ if config["snpeff"]["do"]:
         container:
             config['apptainers']['sequana_tools']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/snpeff"
+            f"{manager.wrappers}/wrappers/snpeff"
 
 
     __freebayes_vcf_filter__input = "{sample}/snpeff/{sample}.ann.vcf"
@@ -363,7 +376,7 @@ rule freebayes_vcf_filter:
     container:
         config['apptainers']['sequana_tools']
     wrapper:
-        f"{sequana_wrapper_branch}/wrappers/freebayes_vcf_filter"
+        f"{manager.wrappers}/wrappers/freebayes_vcf_filter"
 
 
 rule vcf2bcf:
@@ -398,10 +411,12 @@ if config["joint_freebayes"]["do"]:
         params:
             ploidy=config["freebayes"]["ploidy"],
             options=config["joint_freebayes"]["options"]
+        resources:
+            **config["joint_freebayes"]["resources"]
         container:
             config['apptainers']['sequana_tools']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/freebayes"
+            f"{manager.wrappers}/wrappers/freebayes"
 
     # ============================================= snpeff
     if config["snpeff"]["do"]:
@@ -421,7 +436,7 @@ if config["joint_freebayes"]["do"]:
             container:
                 config['apptainers']['sequana_tools']
             wrapper:
-                f"{sequana_wrapper_branch}/wrappers/snpeff"
+                f"{manager.wrappers}/wrappers/snpeff"
 
         expected_output+=["joint_calling/joint_calling.ann.vcf"]
         expected_output+=["joint_calling/snpeff.html"]
@@ -449,7 +464,7 @@ if config["joint_freebayes"]["do"]:
         container:
             config['apptainers']['sequana_tools']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/freebayes_vcf_filter"
+            f"{manager.wrappers}/wrappers/freebayes_vcf_filter"
     expected_output+=["joint_calling/variant_calling.html"]
 
     rule vcf2bcf_joint:
@@ -516,8 +531,10 @@ if config["snpeff"]['do'] or config["sequana_coverage"]["do"]:
             modules=config['multiqc']['modules']
         log:
             "multiqc/multiqc.log"
+        container:
+            config["apptainers"]["multiqc"]
         wrapper:
-           f"{sequana_wrapper_branch}/wrappers/multiqc"
+           f"{manager.wrappers}/wrappers/multiqc"
 
 
 # ======================================================================================== rulegraph
@@ -536,7 +553,7 @@ rule rulegraph:
         mapper = {"multiqc": "../multiqc/multiqc_report.html"},
         configname = "config.yaml"
     wrapper:
-        f"{sequana_wrapper_branch}/wrappers/rulegraph"
+        f"{manager.wrappers}/wrappers/rulegraph"
 
 
 rule dot2svg:
@@ -557,8 +574,7 @@ localrules: rulegraph, multiqc, stats
 onsuccess:
     from sequana.utils import config as conf
     from sequana.utils.datatables_js import DataTable
-    from sequana.modules_report.summary import SummaryModule
-    from sequana.modules_report.summary import SummaryModule2
+    from sequana.modules_report.summary import SequanaReport
     from sequana import logger
     logger.setLevel("INFO")
 
@@ -596,7 +612,10 @@ onsuccess:
             }
 
     conf.output_dir = os.path.abspath(".")
-    s = SummaryModule2(data, intro=intro, workflow=True)
+
+
+    data = manager.getmetadata()
+    s = SequanaReport(data, intro=intro, workflow=True)
 
 
     manager.teardown(extra_files_to_remove=["snpEff.config"],
@@ -604,8 +623,6 @@ onsuccess:
     shell("chmod -R g+w .")
 
 onerror:
-    from sequana_pipetools.errors import PipeError
-    p = PipeError("variant_calling")
-    p.status()
+    manager.onerror()
 
 

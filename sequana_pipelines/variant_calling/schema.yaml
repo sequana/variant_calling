@@ -3,6 +3,8 @@
 
 type: map
 mapping:
+    "sequana_wrappers":
+        type: str
     "input_directory":
         type: str
         required: True
@@ -35,6 +37,11 @@ mapping:
                 range: { min: 1 }
             "tmp_directory":
                 type: str
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "sequencing":
         type: map
@@ -50,9 +57,9 @@ mapping:
     "multiqc":
         type: map
         mapping:
-            "modules":
-              type: str
             "options":
+                type: str
+            "modules":
                 type: str
             "config_file":
                 type: str
@@ -100,6 +107,13 @@ mapping:
             "ploidy":
                 type: int
                 range: { min: 1 }
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
+
+
     "joint_freebayes":
         type: map
         mapping:
@@ -107,6 +121,11 @@ mapping:
                 type: str
             "do":
                 type: bool
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "sequana_coverage":
         type: map
@@ -124,6 +143,9 @@ mapping:
                 range: { min: 0, max: 1}
                 required: False
                 default: 0.5
+            "genbank_file":
+                type: str
+                required: False
             "high_threshold":
                 type: float
                 range: { min: 2 }
@@ -134,6 +156,9 @@ mapping:
                 type: int
                 required: True
                 range: { min: 1, max: 3 }
+            "reference_file":
+                type: str
+                required: False
             "chunksize":
                 type: int
                 required: False
@@ -142,12 +167,34 @@ mapping:
                 default: 20001
                 type: int
                 range: { min: 3 }
+            "binning":
+                type: int
+                range: { min: -1 }
+            "cnv_clustering":
+                type: int
+                range: { min: -1 }
             "gc_window_size":
                 type: int
                 range: { min: 2}
-            "genbank_file":
+            "options":
               type: str
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
+    "samtools_depth":
+        type: map
+        mapping:
+            "max_depth":
+                type: int
+                range: { min: 1 }
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "freebayes_vcf_filter":
         type: map

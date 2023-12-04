@@ -1,0 +1,7 @@
+bwa
+freebayes
+picard
+sambamba
+samtools
+snpEff
+bamtools
