@@ -93,7 +93,9 @@ def main(**options):
         cfg.reference_file = os.path.abspath(options.reference)
 
     if options["from_project"]:
-        pass
+        if "--reference-file" in options:
+            fill_reference_file()
+        
     else:
         fill_annotation_file()
         fill_do_coverage()
@@ -105,7 +107,7 @@ def main(**options):
     # Given the reference, let us compute its length and st the index algorithm
     from sequana import FastA
 
-    f = FastA(options.reference)
+    f = FastA(cfg.reference_file)
     N = f.get_stats()["total_length"]
 
     # seems to be a hardcoded values in bwa according to the documentation

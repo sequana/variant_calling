@@ -326,7 +326,7 @@ rule freebayes:
     resources:
         **config["freebayes"]["resources"]
     container:
-        config['apptainers']['sequana_tools']
+        config['apptainers']['freebayes']
     wrapper:
         f"{manager.wrappers}/wrappers/freebayes"
 
@@ -414,7 +414,7 @@ if config["joint_freebayes"]["do"]:
         resources:
             **config["joint_freebayes"]["resources"]
         container:
-            config['apptainers']['sequana_tools']
+            config['apptainers']['freebayes']
         wrapper:
             f"{manager.wrappers}/wrappers/freebayes"
 
