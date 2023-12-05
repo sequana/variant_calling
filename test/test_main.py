@@ -33,6 +33,16 @@ def test_standalone_script():
             "--reference-file", reference])
     assert results.exit_code == 0
 
+def test_standalone_script_with_coverage():
+
+    wk = tempfile.TemporaryDirectory()
+    runner = CliRunner()
+    results = runner.invoke(main,
+        ["--input-directory", sharedir, "--working-directory", wk.name, "--force", 
+            "--annotation-file", annotation, "--do-coverage",
+            "--reference-file", reference])
+    assert results.exit_code == 0
+
 
 
 
