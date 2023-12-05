@@ -163,16 +163,18 @@ sambamba_filter:
 sequana_coverage:
     do: false
     circular: false
-    window_size: 3001
+    window_size: 10001
     chunksize: 5000000
     double_threshold: 0.5
     gc_window_size: 201
     high_threshold: 4.0
     low_threshold: -4.0
     mixture_models: 2
-    genbank_file: # filled automatically at setup but deprecated
-    resources: 
+    reference_file: ''
+    options: ""
+    resources:
         mem: 8G
+
 
 ##############################################################################
 # Filter VCF

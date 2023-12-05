@@ -272,8 +272,8 @@ if config["sequana_coverage"]["do"]:
             "bed": "{sample}/double_bed/{sample}.bed",
             "fasta": reference_file
         }
-        if config["general"]["annotation_file"]:
-            input_file['gbk'] = config["general"]["annotation_file"]
+        if config["annotation_file"]:
+            input_file['gbk'] = config["annotation_file"]
 
         return input_file
 
@@ -283,7 +283,7 @@ if config["sequana_coverage"]["do"]:
         output:
             "{sample}/sequana_coverage/sequana_coverage.html"
         params:
-            annotation=config["general"]["annotation_file"],
+            annotation=config["annotation_file"],
             circular=config["sequana_coverage"]["circular"],
             chunksize=config["sequana_coverage"]["chunksize"],
             double_threshold=config["sequana_coverage"]["double_threshold"],
@@ -291,7 +291,7 @@ if config["sequana_coverage"]["do"]:
             high_threshold=config["sequana_coverage"]["high_threshold"],
             low_threshold=config["sequana_coverage"]["low_threshold"],
             mixture_models=config["sequana_coverage"]["mixture_models"],
-            otpions=config["sequana_coverage"]["options"],
+            options=config["sequana_coverage"]["options"],
             gbk=annotation_file if config["snpeff"]["do"] else None,
             window_size=config["sequana_coverage"]["window_size"],
         log:

@@ -130,6 +130,7 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.1.1     * Fix regression in coverage rule
 1.1.0     * add specific apptainer for freebayes (v1.2.0)
           * Update API to use click 
 1.0.2     * Fixed failure in multiqc if coverage and snpeff are off
