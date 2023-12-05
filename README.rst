@@ -7,7 +7,7 @@
     :alt: JOSS (journal of open source software) DOI
 
 .. image:: https://github.com/sequana/variant_calling/actions/workflows/main.yml/badge.svg
-   :target: https://github.com/sequana/variant_calling/actions/workflows
+   :target: https://github.com/sequana/variant_calling/actions
 
 .. image:: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C3.10-blue.svg
     :target: https://pypi.python.org/pypi/sequana
