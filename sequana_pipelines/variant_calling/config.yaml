@@ -8,7 +8,7 @@
 # use it, otherwise use input_samples.
 # ============================================================================
 #
-sequana_wrappers: "v23.11.28"
+sequana_wrappers: "v23.12.5"
 
 
 # Mandatory fields
