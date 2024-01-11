@@ -19,6 +19,7 @@ annotation_file:
 reference_file:
 
 apptainers:
+    sequana_coverage: "https://zenodo.org/record/10209929/files/sequana_0.16.1.img"
     sequana_tools: "https://zenodo.org/record/7963917/files/sequana_tools_0.15.1.img"
     graphviz: "https://zenodo.org/record/7928262/files/graphviz_7.0.5.img"
     multiqc: "https://zenodo.org/record/10205070/files/multiqc_1.16.0.img"
@@ -77,7 +78,12 @@ bwa_mem:
 # - do: if unchecked, this rule is ignored.
 # - reference: genbank file.
 # - options: any options recognised by snpEff.
-#
+# - build_options: use at the build stage of snpEff. 
+#       depending on the GFF, you may need to add options to skip some sanity checks
+#       such as noCheckProtein or -noCheckCds. Note also that newest version of snpeff
+#       may need more memory. To do so, you must set the -XmxNg option where N is to be 
+#       replaced by the required memory in Gb. Version of snpEff 5.1 does not seem to accept
+#       that option. 
 # Requires the annotation file
 #
 #   Results filter options:
@@ -89,8 +95,10 @@ bwa_mem:
 #
 snpeff:
     do: true
-    build_options: # -noCheckCds -noCheckProtein
+    build_options: " -Xmx8g " # -noCheckCds -noCheckProtein
     options: -no-downstream -no-upstream 
+    resources:
+        mem: 8G
 
 ##############################################################################
 # Freebayes - Variant caller

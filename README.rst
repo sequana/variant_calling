@@ -130,6 +130,10 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.1.2     * add -Xmx8g option in snpeff rule at the build stage. 
+          * add resources (8G) in the snpeff rule at run stage
+          * fix missing output_directory in sequana_coverage rule
+          * fix joint calling (regression) input function and inputs
 1.1.1     * Fix regression in coverage rule
 1.1.0     * add specific apptainer for freebayes (v1.2.0)
           * Update API to use click 
