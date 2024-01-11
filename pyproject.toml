@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "sequana-variant-calling"
-version = "1.1.1"
+version = "1.1.2"
 description = "A multi-sample variant calling pipeline"
 authors = ["Sequana Team"]
 license = "BSD-3"

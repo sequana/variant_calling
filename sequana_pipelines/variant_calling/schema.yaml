@@ -75,6 +75,11 @@ mapping:
                 type: str
             "options":
                 type: str
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "sambamba_markdup":
         type: map

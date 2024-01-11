@@ -79,6 +79,8 @@ if config["snpeff"]["do"]:
             options=config["snpeff"]["build_options"]
         log:
             "common_logs/snpeff_add_locus_in_fasta.log"
+        resources:
+            **config["snpeff"]["resources"]
         container:
             config['apptainers']['sequana_tools']
         wrapper:
@@ -150,7 +152,7 @@ rule add_read_group:
         manager.getrawdata() if config["input_pattern"].endswith(".bam") 
             else "{sample}/bwa/{sample}.sorted.bam"
     output:
-        "{sample}/add_read_group/{sample}.sorted.bam"
+        bam="{sample}/add_read_group/{sample}.sorted.bam"
     log:
         "{sample}/add_read_group/{sample}.log"
     params:
@@ -170,7 +172,7 @@ if config["sambamba_markdup"]["do"]:
         input:
             "{sample}/add_read_group/{sample}.sorted.bam"
         output:
-            "{sample}/sambamba_markdup/{sample}.sorted.bam"
+            bam="{sample}/sambamba_markdup/{sample}.sorted.bam"
         log: "{sample}/sambamba_markdup.log",
         params:
             options=config["sambamba_markdup"]["options"],
@@ -181,13 +183,13 @@ if config["sambamba_markdup"]["do"]:
         wrapper:
             f"{manager.wrappers}/wrappers/sambamba_markdup"
 
-    __sambamba_filter__input = "{sample}/sambamba_markdup/{sample}.sorted.bam"
-    __freebayes__input       = "{sample}/sambamba_markdup/{sample}.sorted.bam"
-    __samtools_depth__input  = "{sample}/sambamba_markdup/{sample}.sorted.bam"
+    __sambamba_filter__input = rules.sambamba_markdup.output.bam
+    __freebayes__input       = rules.sambamba_markdup.output.bam
+    __samtools_depth__input  = rules.sambamba_markdup.output.bam
 else:
-    __sambamba_filter__input  = "{sample}/add_read_group/{sample}.sorted.bam"
-    __samtools_depth__input   = "{sample}/add_read_group/{sample}.sorted.bam"
-    __freebayes__input        = "{sample}/add_read_group/{sample}.sorted.bam"
+    __sambamba_filter__input  = rules.add_read_group.output.bam
+    __samtools_depth__input   = rules.add_read_group.output.bam
+    __freebayes__input        = rules.add_read_group.output.bam
 
 # ============================================== bam quality filter with sambamba
 if config["sambamba_filter"]["do"]:
@@ -207,7 +209,7 @@ if config["sambamba_filter"]["do"]:
         wrapper:
             f"{manager.wrappers}/wrappers/sambamba_filter"
 
-    __freebayes__input = "{sample}/sambamba_filter/{sample}.filter.sorted.bam"
+    __freebayes__input = rules.sambamba_filter.output[0]
     __samtools_depth__input = [
         "{sample}/sambamba_filter/{sample}.filter.sorted.bam",
     ]
@@ -294,6 +296,7 @@ if config["sequana_coverage"]["do"]:
             options=config["sequana_coverage"]["options"],
             gbk=annotation_file if config["snpeff"]["do"] else None,
             window_size=config["sequana_coverage"]["window_size"],
+            output_directory="{sample}/sequana_coverage"
         log:
             "logs/sequana_coverage/{sample}_sequana_coverage.log"
         resources:
@@ -453,7 +456,7 @@ if config["joint_freebayes"]["do"]:
 
     rule joint_freebayes_vcf_filter:
         input:
-            get_joint_freebayes_vcf_filter_input
+            get_joint_freebayes_vcf_filter_input()
         output:
             vcf="joint_calling/joint_calling.filter.vcf",
             csv="joint_calling/joint_calling.filter.csv",
@@ -476,8 +479,8 @@ if config["joint_freebayes"]["do"]:
             config['apptainers']['sequana_tools']
         shell:
             """
-            bgzip -c {input.vcf_filter} > {input.vcf_filter}.gz
-            tabix {input.vcf_filter}.gz
+            bgzip -c {input.vcf} > {input.vcf}.gz
+            tabix {input.vcf}.gz
             bcftools view {input.vcf}.gz -O b -o {output.bcf}
             """
     expected_output += ["joint_calling/joint_calling.filter.bcf"]
@@ -607,12 +610,7 @@ onsuccess:
         intro += "<h2>Joint calling Report</h2>"
         intro += """Joint calling was requested. A HTML report is available: <a href="joint_calling/variant_calling.html">here</a>"""
 
-    data = {"name": "variant_calling",
-            "rulegraph": ".sequana/rulegraph.svg",
-            }
-
     conf.output_dir = os.path.abspath(".")
-
 
     data = manager.getmetadata()
     s = SequanaReport(data, intro=intro, workflow=True)
