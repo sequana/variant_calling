@@ -350,6 +350,8 @@ if config["snpeff"]["do"]:
             "{sample}/snpeff/{sample}_snpeff.log"
         params:
             options=config["snpeff"]["options"]
+        resources:
+            **config["snpeff"]["resources"]
         container:
             config['apptainers']['sequana_tools']
         wrapper:
@@ -376,6 +378,8 @@ rule freebayes_vcf_filter:
         html="{sample}/variant_calling.html"
     params:
         filter_dict=config["freebayes_vcf_filter"]
+    resources:
+        **config["freebayes"]["resources"]
     container:
         config['apptainers']['sequana_tools']
     wrapper:
@@ -466,6 +470,8 @@ if config["joint_freebayes"]["do"]:
             report_dir="joint_calling"
         container:
             config['apptainers']['sequana_tools']
+        resources:
+            **config["freebayes"]["resources"]
         wrapper:
             f"{manager.wrappers}/wrappers/freebayes_vcf_filter"
     expected_output+=["joint_calling/variant_calling.html"]
