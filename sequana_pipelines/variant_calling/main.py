@@ -10,17 +10,16 @@
 #  documentation: http://sequana.readthedocs.io
 #
 ##############################################################################
-import sys
 import os
+import sys
 
-import rich_click as click
 import click_completion
+import rich_click as click
 
 click_completion.init()
 
-from sequana_pipetools.options import *
 from sequana_pipetools import SequanaManager
-
+from sequana_pipetools.options import *
 
 NAME = "variant_calling"
 
@@ -30,11 +29,14 @@ help = init_click(
     groups={
         "Pipeline Specific": [
             "--reference-file",
+            "--aligner-choice",
             "--annotation-file",
             "--circular",
             "--do-coverage",
             "--do-joint-calling",
             "--freebayes-ploidy",
+            "--nanopore",
+            "--pacbio",
         ],
     },
 )
@@ -45,11 +47,58 @@ help = init_click(
 @include_options_from(ClickSlurmOptions)
 @include_options_from(ClickInputOptions)
 @include_options_from(ClickGeneralOptions)
-@click.option("--annotation-file", "annotation", default=None, help="The annotation for snpeff. This is optional but highly recommended to obtain meaningful HTML report.")
-@click.option("--do-coverage", "do_coverage", is_flag=True, default=False, show_default=True, help="perform the coverage analysis using sequana_coverage.")
+@click.option(
+    "--aligner-choice",
+    "aligner",
+    type=click.Choice(["bwa", "minimap2"]),
+    default="bwa",
+    show_default=True,
+    help="The aligner in bwa / minimap2 .",
+)
+@click.option(
+    "--do-coverage",
+    "do_coverage",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="perform the coverage analysis using sequana_coverage.",
+)
+@click.option(
+    "--annotation-file",
+    "annotation",
+    default=None,
+    help="The annotation for snpeff. This is optional but highly recommended to obtain meaningful HTML report.",
+)
+@click.option(
+    "--do-coverage",
+    "do_coverage",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="perform the coverage analysis using sequana_coverage.",
+)
+@click.option(
+    "--nanopore",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="if set, fix minimap2 as the aligner, and uses -x map-ont for the minimap2 options",
+)
+@click.option(
+    "--pacbio",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="if set, fix minimap2 as the aligner, and uses -x map-pb for the minimap2 options",
+)
 @click.option("--do-joint-calling", "do_joint_calling", is_flag=True, help="do the joint calling analysis")
-@click.option("--freebayes-ploidy", type=int, default=1, show_default=True, 
-    help="""For population, or eukaryotes, change the ploidy to the correct values. For population, you may set it to 10.""")
+@click.option(
+    "--freebayes-ploidy",
+    type=int,
+    default=1,
+    show_default=True,
+    help="""For population, or eukaryotes, change the ploidy to the correct values. For population, you may set it to 10.""",
+)
 @click.option("-o", "--circular", is_flag=True, help="Recommended for bacteria genomes and circularised genomes")
 @click.option("--reference-file", "reference", required=True, help="The input reference to mapped reads onto")
 def main(**options):
@@ -66,11 +115,17 @@ def main(**options):
     def fill_annotation_file():
         if options.annotation:
             cfg.snpeff.do = True
-            cfg.annotation_file = os.path.abspath(options.annotation)
+            cfg.general.annotation_file = os.path.abspath(options.annotation)
             # manager.exists(cfg.annotation_file)
             # print("." in cfg.annotation_file,  cfg.annotation_file.split(".")[-1])
-            if "." not in cfg.annotation_file or cfg.annotation_file.split(".")[-1] not in ["gbk", "gff", "gff3"]:
-                click.echo("The annotation file must in in .gbk or .gff or .gff3. You provided {cfg.annotation_file}")
+            if "." not in cfg.general.annotation_file or cfg.general.annotation_file.split(".")[-1] not in [
+                "gbk",
+                "gff",
+                "gff3",
+            ]:
+                click.echo(
+                    "The annotation file must in in .gbk or .gff or .gff3. You provided {cfg.general.annotation_file}"
+                )
                 sys.exit(1)
         else:
             cfg.snpeff.do = False
@@ -90,12 +145,18 @@ def main(**options):
 
     def fill_reference_file():
         # required argument
-        cfg.reference_file = os.path.abspath(options.reference)
+        cfg.general.reference_file = os.path.abspath(options.reference)
+
+    # first if option --long-read is used (overwritten by other options)
+    if options["nanopore"]:
+        cfg.general.aligner_choice = "minimap2"
+        cfg.minimap2.options = "-x map-ont"
+    elif options["pacbio"]:
+        cfg.general.aligner_choice = "minimap2"
+        cfg.minimap2.options = "-x map-pb"
 
     if options["from_project"]:
-        if "--reference-file" in options:
-            fill_reference_file()
-        
+        raise NotImplementedError
     else:
         fill_annotation_file()
         fill_do_coverage()
@@ -104,10 +165,10 @@ def main(**options):
         fill_ploidy_freebayes()
         fill_reference_file()
 
-    # Given the reference, let us compute its length and st the index algorithm
+    # Given the reference, let us compute its length and the index algorithm
     from sequana import FastA
 
-    f = FastA(cfg.reference_file)
+    f = FastA(cfg.general.reference_file)
     N = f.get_stats()["total_length"]
 
     # seems to be a hardcoded values in bwa according to the documentation

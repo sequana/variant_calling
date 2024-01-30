@@ -60,8 +60,8 @@ rule all:
         others
 
 
-reference_file  = config["reference_file"]
-annotation_file = config["annotation_file"]
+reference_file  = config["general"]["reference_file"]
+annotation_file = config["general"]["annotation_file"]
 new_reference = f"reference/{os.path.basename(reference_file)}"
 
 
@@ -71,8 +71,8 @@ if config["snpeff"]["do"]:
 
     rule snpeff_add_locus_in_fasta:
         input:
-            config["reference_file"],
-            config["annotation_file"]
+            reference_file,
+            annotation_file
         output:
             new_reference
         params:
@@ -104,45 +104,67 @@ else:
 # ========================================================= BWA
 # The pipeline can be started with sorted BAM files
 #
+aligner = config["general"]["aligner_choice"]
 if not config["input_pattern"].endswith("bam"):
 
-    # ========================================================= bwa indexing
-    rule bwa_index:
-        input:
-            reference=new_reference
-        output:
-            bwa_bwt=new_reference + ".bwt",
-            fai=new_reference + ".fai"
-        log:
-            "reference/build.log"
-        params:
-            options=config['bwa_mem'].get('index_options', ""),
-            index_algorithm=config['bwa_mem'].get('index_algorithm', "is")
-        container:
-            config['apptainers']['sequana_tools']
-        threads: 2
-        wrapper:
-            f"{manager.wrappers}/wrappers/bwa/build"
+    if aligner == "bwa":
+        # ========================================================= bwa indexing
+        rule bwa_index:
+            input:
+                reference=new_reference
+            output:
+                bwa_bwt=new_reference + ".bwt",
+                fai=new_reference + ".fai"
+            log:
+                "reference/build.log"
+            params:
+                options=config['bwa_mem'].get('index_options', ""),
+                index_algorithm=config['bwa_mem'].get('index_algorithm', "is")
+            container:
+                config['apptainers']['sequana_tools']
+            threads: 2
+            wrapper:
+                f"{manager.wrappers}/wrappers/bwa/build"
 
-    # ========================================================= bwa mapping
-    rule bwa:
-        input:
-            fastq=manager.getrawdata(),
-            bwa_bwt=new_reference + ".bwt",
-            fai=new_reference + ".fai",
-            reference=new_reference
-        output:
-            sorted="{sample}/bwa/{sample}.sorted.bam"
-        log:
-            "{sample}/bwa/{sample}.log"
-        params:
-            options=config["bwa_mem"]["options"],
-            tmp_directory=config["bwa_mem"]["tmp_directory"]
-        container:
-            config['apptainers']['sequana_tools']
-        threads: 2
-        wrapper:
-            f"{manager.wrappers}/wrappers/bwa/align"
+        # ========================================================= bwa mapping
+        rule bwa:
+            input:
+                fastq=manager.getrawdata(),
+                bwa_bwt=new_reference + ".bwt",
+                fai=new_reference + ".fai",
+                reference=new_reference
+            output:
+                sorted="{sample}/bwa/{sample}.sorted.bam"
+            log:
+                "{sample}/bwa/{sample}.log"
+            params:
+                options=config["bwa_mem"]["options"],
+                tmp_directory=config["bwa_mem"]["tmp_directory"]
+            container:
+                config['apptainers']['sequana_tools']
+            threads: 2
+            wrapper:
+                f"{manager.wrappers}/wrappers/bwa/align"
+
+    elif aligner == "minimap2":
+        rule minimap2:
+            input:
+                fastq=manager.getrawdata(),
+                reference=new_reference
+            output:
+                sorted="{sample}/minimap2/{sample}.sorted.bam"
+            threads:
+                config["minimap2"]["threads"]
+            params:
+                options=config['minimap2']['options']
+            container:
+                config['apptainers']['minimap2']
+            resources:
+                **config["minimap2"]["resources"]
+            wrapper:
+                f"{manager.wrappers}/wrappers/minimap2"
+    else:
+        raise ValueError(f"aligner_choice must be set to bwa or minimap2. You set {aligner}")
 
 
 # ========================================================= add read group
@@ -150,7 +172,7 @@ if not config["input_pattern"].endswith("bam"):
 rule add_read_group:
     input:
         manager.getrawdata() if config["input_pattern"].endswith(".bam") 
-            else "{sample}/bwa/{sample}.sorted.bam"
+            else "{sample}/" + aligner + "/{sample}.sorted.bam"
     output:
         bam="{sample}/add_read_group/{sample}.sorted.bam"
     log:
@@ -274,8 +296,8 @@ if config["sequana_coverage"]["do"]:
             "bed": "{sample}/double_bed/{sample}.bed",
             "fasta": reference_file
         }
-        if config["annotation_file"]:
-            input_file['gbk'] = config["annotation_file"]
+        if config["general"]["annotation_file"]:
+            input_file['gbk'] = config["general"]["annotation_file"]
 
         return input_file
 
@@ -285,7 +307,7 @@ if config["sequana_coverage"]["do"]:
         output:
             "{sample}/sequana_coverage/sequana_coverage.html"
         params:
-            annotation=config["annotation_file"],
+            annotation=annotation_file,
             circular=config["sequana_coverage"]["circular"],
             chunksize=config["sequana_coverage"]["chunksize"],
             double_threshold=config["sequana_coverage"]["double_threshold"],

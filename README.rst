@@ -80,7 +80,7 @@ if you decide to use snakemake manually, do not forget to add singularity option
 
     snakemake -s variant_calling.rules -c config.yaml --cores 4 --stats stats.txt --use-singularity --singularity-prefix ~/.sequana/apptainers --singularity-args "-B /home:/home"
 
-    
+
 
 Requirements
 ~~~~~~~~~~~~
@@ -91,6 +91,7 @@ This pipelines requires the following executable(s):
 - freebayes
 - picard (picard-tools)
 - sambamba
+- minimap2
 - samtools
 - snpEff you will need 5.0 or 5.1d (note the d); 5.1 does not work.
 
@@ -105,7 +106,7 @@ written by Erik Garrison. Input reads (paired or single) are mapped using
 `bwa <http://bio-bwa.sourceforge.net/>`_ and sorted with
 `sambamba-sort <http://lomereiter.github.io/sambamba/docs/sambamba-sort.html>`_.
 PCR duplicates are marked with
-`sambamba-markdup <http://lomereiter.github.io/sambamba/docs/sambamba-sort.html>`_. 
+`sambamba-markdup <http://lomereiter.github.io/sambamba/docs/sambamba-sort.html>`_.
 `Freebayes <https://github.com/ekg/freebayes>`_ is used to detect SNPs and short
 INDELs. The INDEL realignment and base quality recalibration are not necessary
 with Freebayes. For more information, please refer to a post by Brad Chapman on
@@ -130,15 +131,22 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
-1.1.2     * add -Xmx8g option in snpeff rule at the build stage. 
+1.2.0     * -Xmx8g option previously added is not robust. Does not work with
+            snpEff 5.1 for instance.
+          * add minimap aligner
+          * add --nanopore and --pacbio to automatically set minimap2 as the
+            aligner and the minimap options (map-pb or map-ont)
+          * add minimap2 container.
+          * add missing resources in snpeff section
+1.1.2     * add -Xmx8g option in snpeff rule at the build stage.
           * add resources (8G) in the snpeff rule at run stage
           * fix missing output_directory in sequana_coverage rule
           * fix joint calling (regression) input function and inputs
 1.1.1     * Fix regression in coverage rule
 1.1.0     * add specific apptainer for freebayes (v1.2.0)
-          * Update API to use click 
+          * Update API to use click
 1.0.2     * Fixed failure in multiqc if coverage and snpeff are off
-1.0.1     * automatically fill the bwa index algorithm and fix bwa_index rule to 
+1.0.1     * automatically fill the bwa index algorithm and fix bwa_index rule to
             use the options in the config file (not the harcoded one)
 1.0.0     * use last warppers and graphviz apptainer
 0.12.0    * set all apptainers containers and add vcf to bcf conversions
@@ -149,7 +157,7 @@ Version   Description
 0.9.5     * fix typo in the onsuccess and update sequana requirements to use
             most up-to-date snakemake rules
 0.9.4     * fix typo related to the reference-file option new name not changed
-            everyhere in the pipeline. 
+            everyhere in the pipeline.
 0.9.3     * use new framework (faster --help, --from-project option)
           * rename --reference into --reference-file and --annotation to
             --annotation-file
@@ -159,7 +167,7 @@ Version   Description
             samplesnpeff)
           * add multiqc to show sequana_coverage and snpeff summary sections
           * cleanup onsuccess section
-          * more options sanity checks and options (e.g., 
+          * more options sanity checks and options (e.g.,
           * genbank_file renamed into annotation_file in the config
           * use --legacy in freebayes options
           * fix coverage section to use new sequana api
@@ -172,7 +180,6 @@ Version   Description
 Contribute & Code of Conduct
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To contribute to this project, please take a look at the 
-`Contributing Guidelines <https://github.com/sequana/sequana/blob/maib/CONTRIBUTING.rst>`_ first. Please note that this project is released with a 
+To contribute to this project, please take a look at the
+`Contributing Guidelines <https://github.com/sequana/sequana/blob/maib/CONTRIBUTING.rst>`_ first. Please note that this project is released with a
 `Code of Conduct <https://github.com/sequana/sequana/blob/main/CONDUCT.md>`_. By contributing to this project, you agree to abide by its terms.
-

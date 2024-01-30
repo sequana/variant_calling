@@ -14,12 +14,20 @@ mapping:
     "input_pattern":
         type: str
         required: True
-    "annotation_file":
-        type: str
-        required: False
-    "reference_file":
-        type: str
-        required: True
+
+
+    "general":
+        type: map
+        mapping:
+            "annotation_file":
+                type: str
+                required: False
+            "reference_file":
+                type: str
+                required: True
+            "aligner_choice":
+                type: str
+                enum: [bwa, minimap2]
 
     "apptainers":
         type: any
@@ -65,6 +73,21 @@ mapping:
                 type: str
             "input_directory":
                 type: str
+
+    "minimap2":
+        type: map
+        mapping:
+            "options":
+                type: str
+            "threads":
+                type: int
+                range: { min: 1 }
+            "resources":
+                type: map
+                mapping:
+                    "mem":
+                        type: str
+
 
     "snpeff":
         type: map
