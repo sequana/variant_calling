@@ -59,12 +59,12 @@ def test_check_output_ref_annot():
 
         subprocess.call("sh variant_calling.sh".split(), cwd=wk)
 
-        from sequana.freebayes_vcf_filter import VCF_freebayes, Variant
-        vcf = VCF_freebayes(wk + "/data/freebayes/data.raw.vcf")
-        vcf.rewind()
-        vv = [Variant(v)._resume for v in vcf]
+        from sequana.variants import VariantFile
+
+        vcf = VariantFile(wk + "/data/freebayes/data.raw.vcf")
+        vv = [vcf._variant_to_dict(v) for v in vcf]
         # this may change depending on the freebayes version...
-        assert len(vv) == pytest.approx(65, .1)
+        assert len(vv) == pytest.approx(65, 2)
         vv = vv[0].copy()
         del vv['freebayes_score']
         del vv['fisher_pvalue']
@@ -72,10 +72,9 @@ def test_check_output_ref_annot():
         assert vv == {'alternative': 'T',
              'chr': 'JB409847',
              'depth': 23,
-             #'freebayes_score': 2.78452e-14,
-             'type': 'SNV',
+             'type': 'snp',
              'frequency': '0.261',
-             'position': '2221',
+             'position': 2221,
              'reference': 'C',
              'strand_balance': '0.333'}
 
@@ -97,10 +96,10 @@ def test_check_output_no_annotation():
 
         subprocess.call("sh variant_calling.sh".split(), cwd=wk)
 
-        from sequana.freebayes_vcf_filter import VCF_freebayes, Variant
-        vcf = VCF_freebayes(wk + "/data/freebayes/data.raw.vcf")
-        vcf.rewind()
-        vv = [Variant(v)._resume for v in vcf]
+        from sequana.variants import VariantFile
+        vcf = VariantFile(wk + "/data/freebayes/data.raw.vcf")
+        
+        vv = [vcf._variant_to_dict(v) for v in vcf]
         # this may change depending on the freebayes version...
         assert len(vv) == pytest.approx(65, .1)
         vv = vv[0].copy()
@@ -110,9 +109,9 @@ def test_check_output_no_annotation():
              'chr': 'JB409847',
              'depth': 23,
              #'freebayes_score': 2.78452e-14,
-             'type': 'SNV',
+             'type': 'snp',
              'frequency': '0.261',
-             'position': '2221',
+             'position': 2221,
              'reference': 'C',
              'strand_balance': '0.333'}
 

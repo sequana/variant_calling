@@ -25,19 +25,21 @@ This is the **variant_calling** pipeline from the `Sequana <https://sequana.read
 Installation
 ~~~~~~~~~~~~
 
-If you already have all requirements, you can install the packages using pip::
+You can install sequana_variant_calling pipeline using::
 
     pip install sequana_variant_calling --upgrade
 
-Otherwise, you can create a *sequana_variant_calling* conda environment executing::
+I would recommend to setup a *sequana_variant_calling* conda environment executing::
 
     conda env create -f environment.yml
 
-and later activate the environment::
+where the environment.yml can be found in the https://github.com/sequana/variant_calling repository.
+
+Later, you can activate the environment as follows::
 
   conda activate sequana_variant_calling
 
-A third option is to install the pipeline with pip method (see above) and use singularity as explained afterwards.
+Note, however, that the recommended method is to use singularity/apptainer as explained here below.
 
 
 Usage
@@ -45,10 +47,9 @@ Usage
 
 ::
 
-    sequana_variant_calling --help
-    sequana_variant_calling --input-directory DATAPATH --reference-file measles.fa
+    sequana_variant_calling --input-directory DATAPATH --reference-file measles.fa 
 
-This creates a directory **variant_calling**. You just need to execute the pipeline::
+This creates a directory **variant_calling**. You just need to move into the directory and execute the script::
 
     cd variant_calling
     sh variant_calling.sh
@@ -58,6 +59,8 @@ retrieve the pipeline itself and its configuration files and then execute the pi
 
     snakemake -s variant_calling.rules -c config.yaml --cores 4 --stats stats.txt
 
+you can also edit the profile file in .sequana/profile/config.ya,l
+
 Or use `sequanix <https://sequana.readthedocs.io/en/main/sequanix.html>`_ interface.
 
 Usage with singularity::
@@ -65,13 +68,11 @@ Usage with singularity::
 
 With singularity, initiate the working directory as follows::
 
-    sequana_variant_calling --use-singularity
-
-Images are downloaded in the working directory but you can store then in a directory globally (e.g.)::
-
     sequana_variant_calling --use-singularity --singularity-prefix ~/.sequana/apptainers
 
-and then::
+Images are downloaded in a global direcory (here .sequana/apptainers) so that you can reuse them later.
+
+and then as before::
 
     cd variant_calling
     sh variant_calling.sh
@@ -80,12 +81,11 @@ if you decide to use snakemake manually, do not forget to add singularity option
 
     snakemake -s variant_calling.rules -c config.yaml --cores 4 --stats stats.txt --use-singularity --singularity-prefix ~/.sequana/apptainers --singularity-args "-B /home:/home"
 
-
-
 Requirements
 ~~~~~~~~~~~~
 
-This pipelines requires the following executable(s):
+If you rely on singularity/apptainer, no extra dependencies are required (expect python and
+https://damona.readthedocs.io). If you cannot use apptainer, you will need to install some software: 
 
 - bwa
 - freebayes
@@ -94,6 +94,7 @@ This pipelines requires the following executable(s):
 - minimap2
 - samtools
 - snpEff you will need 5.0 or 5.1d (note the d); 5.1 does not work.
+
 
 .. image:: https://raw.githubusercontent.com/sequana/sequana_variant_calling/main/sequana_pipelines/variant_calling/dag.png
 
@@ -124,6 +125,64 @@ such as particular codon table will required edition of the snpeff configuration
 
 Finally, joint calling is also available and can be switch on if desired.
 
+Tutorial
+~~~~~~~~
+
+Let us download an ecoli reference genome and the data set used to create the assembly. All tools used here below can be
+installed with damona (or your favorite environment manager)::
+
+    pip install damona
+    damona create TEST
+    damona activate TEST
+    damona install pigz
+    damona install sratoolkit # for fasterq-dump
+    damona install datasets
+
+Then, download the data::
+
+    fasterq-dump SRR13921546
+    pigz SRR*fastq
+
+and the reference genome with its annnotation::
+
+    datasets download genome accession GCF_000005845.2 --include gff3,rna,cds,protein,genome,seq-report,gbff
+    unzip ncbi_dataset.zip
+    ln -s ncbi_dataset/data/GCF_000005845.2/GCF_000005845.2_ASM584v2_genomic.fna ecoli.fa
+    ln -s ncbi_dataset/data/GCF_000005845.2/genomic.gff ecoli.gff
+
+
+Initiate the pipeline::
+ 
+    sequana_variant_calling --input-directory . --reference-file ecoli.fa --aligner-choice bwa_split \
+        --do-coverage --annotation-file ecoli.gff  \
+        --use-apptainer --apptainer-prefix ~/.sequana/apptainers \ 
+        --input-readtag "_[12]." 
+
+Explication:
+
+- we use apptainer/singularity
+- we use the reference genome ecoli.fa (--reference-file) and its annotation for SNPeff (--annotation-file)
+- we use the sequana_coverage tool (True by default) to get coverage plots.
+- we use --input-directory to indicatre where to find the input files
+- This data set is paired. In NGS, it is common to have _R1_ and _R2_ tags to differentiate the 2 files. Here the tag
+are _1 and _2. In sequana we define the a wildcard for the read tag. So here we tell the software that thex ecpted tag
+follow this pattern: "_[12]." and everything is then automatic.
+
+Then follow the instructions (prepare and execute the pipeline).
+
+You should end up with a summary.hml report.
+
+You can brwose the different samples (only one in this example) and get a table with variant calls:
+
+
+    table.png
+
+If you set the coverage one, (not recommended for eukaryotes), you should see this kind of plots::
+
+    coverage.png
+
+
+
 
 Changelog
 ~~~~~~~~~
@@ -131,6 +190,10 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.3.0     * Updated version to use latest damona containers and latest 
+            sequana version 0.19.1. added plot in HTML report with distribution
+            of variants. added tutorial. added bwa_split and freebaye split to 
+            process ultra deep sequencing.
 1.2.0     * -Xmx8g option previously added is not robust. Does not work with
             snpEff 5.1 for instance.
           * add minimap aligner

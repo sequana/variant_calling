@@ -19,6 +19,7 @@ Run: snakemake -s variant_calling.rules
 """
 import os
 import shutil
+import glob
 import json
 
 import pandas as pd
@@ -34,6 +35,7 @@ configfile: "config.yaml"
 # A convenient manager
 manager = PipelineManager("variant_calling", config)
 
+chunksize = config['freebayes']['chunksize']
 
 # ================================================= some sanity checks
 # if there are more than one sample lets do a joint calling with all samples
@@ -44,14 +46,11 @@ if len(manager.samples) == 1:
 # ================================================== Define outputs
 expected_output = []
 
+others = ["multiqc/multiqc_report.html"]
 
-others = []
 if config['joint_freebayes']['do']:
     others += ["joint_calling/variant_calling.html"]
 
-
-if config["snpeff"]['do'] or config["sequana_coverage"]["do"]:
-    others += ["multiqc/multiqc_report.html"]
 
 rule all:
     input:
@@ -100,6 +99,74 @@ elif not os.path.isfile(reference_file + ".fai"):
 else:
     new_reference = reference_file
 
+# Cleaning the data (or not)
+#
+def get_input_data():
+    if manager.config.fastp.do is False:
+        return manager.getrawdata()
+    else:
+        __clean_fastq__output = ["{sample}/fastp/{sample}_R1_.fastq.gz"]
+        if manager.paired:
+            __clean_fastq__output += ["{sample}/fastp/{sample}_R2_.fastq.gz"]
+        return __clean_fastq__output 
+
+if manager.config.fastp.do:
+
+    fastp_outputs = get_input_data()
+
+    _quality = config["fastp"].get("quality", 15)
+    _minlen = config["fastp"].get("minimum_length", 20)
+    options_fastp = config["fastp"].get("options", "")
+    options_fastp += f" --qualified_quality_phred {_quality}"
+    options_fastp += f" -l {_minlen}"
+    if config["fastp"].get("disable_adapter_trimming", False) is True:
+        options_fastp += "--disable_adapter_trimming"
+    if config["fastp"].get("disable_quality_filtering", False) is True:
+        options_fastp += "--disable_quality_filtering"
+
+    rule fastp:
+        input:
+            sample=manager.getrawdata()
+        output:
+            trimmed=fastp_outputs,
+            html="{sample}/fastp/fastp_{sample}.html",
+            json="{sample}/fastp/fastp_{sample}.json", # must be named fastp
+        log:
+            "logs/fastp/{sample}.log"
+        params:
+            options=options_fastp,
+            adapters=config["fastp"]["adapters"]
+        threads:
+            config["fastp"].get("threads", 4)
+        resources:
+            **config['fastp']['resources']
+        container:
+            config['apptainers']['fastp']
+        wrapper:
+            f"{manager.wrappers}/wrappers/fastp"
+
+
+
+rule fastqc:
+    input:
+        get_input_data()
+    output:
+        done = "{sample}/fastqc/fastqc.done"
+    params:
+        options= config["fastqc"]["options"],
+        working_directory= "{sample}/fastqc"
+    threads: config["fastqc"]["threads"]
+    log:
+        "{sample}/fastqc/fastqc.log"
+    resources:
+        **config["fastqc"]['resources']
+    container:
+        config['apptainers']['fastqc']
+    wrapper:
+        f"{manager.wrappers}/wrappers/fastqc"
+expected_output.extend(expand("{sample}/fastqc/fastqc.done", sample=manager.samples))
+
+
 
 # ========================================================= BWA
 # The pipeline can be started with sorted BAM files
@@ -107,7 +174,9 @@ else:
 aligner = config["general"]["aligner_choice"]
 if not config["input_pattern"].endswith("bam"):
 
-    if aligner == "bwa":
+    if aligner in ["bwa", "bwa_split"]:
+        reference = config["general"]["reference_file"]
+
         # ========================================================= bwa indexing
         rule bwa_index:
             input:
@@ -118,18 +187,22 @@ if not config["input_pattern"].endswith("bam"):
             log:
                 "reference/build.log"
             params:
-                options=config['bwa_mem'].get('index_options', ""),
-                index_algorithm=config['bwa_mem'].get('index_algorithm', "is")
+                options=config['bwa'].get('index_options', ""),
+                index_algorithm=config['bwa'].get('index_algorithm', "is")
             container:
                 config['apptainers']['sequana_tools']
             threads: 2
+            resources:
+                **config["bwa_index"]["resources"],
             wrapper:
                 f"{manager.wrappers}/wrappers/bwa/build"
+
+    if aligner == "bwa":
 
         # ========================================================= bwa mapping
         rule bwa:
             input:
-                fastq=manager.getrawdata(),
+                fastq=get_input_data(),
                 bwa_bwt=new_reference + ".bwt",
                 fai=new_reference + ".fai",
                 reference=new_reference
@@ -138,18 +211,107 @@ if not config["input_pattern"].endswith("bam"):
             log:
                 "{sample}/bwa/{sample}.log"
             params:
-                options=config["bwa_mem"]["options"],
-                tmp_directory=config["bwa_mem"]["tmp_directory"]
+                options=config["bwa"]["options"],
+                tmp_directory=config["bwa"]["tmp_directory"]
             container:
                 config['apptainers']['sequana_tools']
             threads: 2
+            resources:
+                **config["bwa"]["resources"]
             wrapper:
                 f"{manager.wrappers}/wrappers/bwa/align"
+
+    elif aligner == "bwa_split":
+
+        checkpoint split_fasta:
+            input:
+                get_input_data()
+            output:
+                directory("{sample}/split/"),
+            params:
+                nreads=config["bwa_split"]["nreads"],
+            container:
+                config["apptainers"]["seqkit"]
+            shell:
+                """
+                seqkit split2 --by-size {params.nreads} -O {wildcards.sample}/split -1 {input[0]} -2 {input[1]}
+                """
+
+        def get_bwa_input():
+            if manager.paired is True:
+                return (
+                    "{sample}/split/{sample}_R1_.{splitid}.fastq.gz",
+                    "{sample}/split/{sample}_R2_.{splitid}.fastq.gz",
+                )
+            else:
+                return "{sample}/split/{sample}_R1_.{splitid}.fastq.gz"
+
+        # intermediate
+        rule bwa_intermediate:
+            input:
+                fastq=get_bwa_input(),
+                bwa_bwt=new_reference + ".bwt",
+                fai=new_reference + ".fai",
+                reference=new_reference
+            output:
+                sorted="{sample}/split/{sample}.sorted.{splitid}.bam",
+            log:
+                "{sample}/split/{sample}.{splitid}.log",
+            params:
+                options=config["bwa"]["options"],
+                tmp_directory=config["bwa"]["tmp_directory"],
+            threads: 2
+            resources:
+                **config["bwa"]["resources"],
+            container:
+                config["apptainers"]["bwa"]
+            wrapper:
+                f"{manager.wrappers}/wrappers/bwa/align"
+
+        def aggregate_bwa(wildcards):
+            checkpoint_output = checkpoints.split_fasta.get(**wildcards).output[0]
+            splitter = glob.glob(checkpoint_output + "/*.gz")
+            splitter = [
+                x.split(".")[-3]
+                for x in splitter
+                if x.endswith(".gz") and "_R1_" in x or "_R1." or "_1." in x
+            ]
+            filenames = expand(
+                "{{sample}}/split/{{sample}}.sorted.{splitid}.bam", splitid=splitter
+            )
+            # prevent R1 and R2 to be provided at same time.
+            filenames = list(set(filenames))
+            return filenames
+
+        rule bwa_merge:
+            input:
+                aggregate_bwa,
+            output:
+                bam="{sample}/bwa_split/{sample}.bam",
+            container:
+                config["apptainers"]["samtools"]
+            shell:
+                """
+                samtools merge {output} {input}
+                """
+
+        rule sorting_bam:
+            input:
+                rules.bwa_merge.output.bam
+            output:
+                sorted="{sample}/bwa_split/{sample}.sorted.bam"
+            container:
+                config["apptainers"]["samtools"]
+            shell:
+                """
+                samtools sort {input} > {output}
+                samtools index {output} 
+                """
 
     elif aligner == "minimap2":
         rule minimap2:
             input:
-                fastq=manager.getrawdata(),
+                fastq=get_input_data(),
                 reference=new_reference
             output:
                 sorted="{sample}/minimap2/{sample}.sorted.bam"
@@ -171,7 +333,7 @@ if not config["input_pattern"].endswith("bam"):
 #
 rule add_read_group:
     input:
-        manager.getrawdata() if config["input_pattern"].endswith(".bam") 
+        get_input_data() if config["input_pattern"].endswith(".bam") 
             else "{sample}/" + aligner + "/{sample}.sorted.bam"
     output:
         bam="{sample}/add_read_group/{sample}.sorted.bam"
@@ -239,6 +401,7 @@ if config["sambamba_filter"]["do"]:
 
 # ========================================================= sequana_coverage analysis
 if config["sequana_coverage"]["do"]:
+    config["sequana_coverage"]["reference_file"] = new_reference
 
     rule bedtools_depth:
         input:
@@ -333,27 +496,99 @@ if config["sequana_coverage"]["do"]:
 
 
 # ========================================================= freebayes
-
 # Variant calling with Freebayes
-# bai file is setup in freebayes rule for pipeline summary
-
-rule freebayes:
+checkpoint get_regions:
     input:
-        bam = __freebayes__input,
-        ref= new_reference
+        fai= f"{new_reference}.fai"
     output:
-        "{sample}/freebayes/{sample}.raw.vcf"
-    log:
-        "{sample}/freebayes/{sample}_freebayes.log"
+        dir=directory("resources/regions"),
+        ready="resources/regions/ready"
+    params:
+        chunks=chunksize
+    container:
+        config['apptainers']['freebayes']
+    shell:
+        """
+        # script from freebayes to decompose the input ref into smaller chunks
+        mkdir -p resources && mkdir -p resources/regions
+        # fasta_generate_regions requires a prefix (here data)
+        fasta_generate_regions.py {input.fai} {params.chunks} --bed resources/regions/data
+        touch {output.ready}
+        """
+
+def get_freebayes_input():
+    return "resources/regions/data.{chrom}.region.{chunk}.bed"
+
+
+rule freebayes_intermediate:
+    input:
+        #rules.get_regions.output.ready,
+        ref= new_reference,
+        fai= f"{new_reference}.fai",
+        bam="{sample}/add_read_group/{sample}.sorted.bam",
+        region=get_freebayes_input()
     params:
         ploidy=config["freebayes"]["ploidy"],
         options=config["freebayes"]["options"]
+    output:
+        vcf="{sample}/freebayes_split/data.{chrom}.region.{chunk}.vcf"
+    #log:
+    #    "{sample}/freebayes/{sample}_freebayes.log"
     resources:
         **config["freebayes"]["resources"]
     container:
         config['apptainers']['freebayes']
-    wrapper:
-        f"{manager.wrappers}/wrappers/freebayes"
+    shell:
+        """
+        freebayes {params.options} -p {params.ploidy} -f {input.ref} -t {input.region} {input.bam} > {output.vcf}
+        """
+
+
+def aggregate_freebayes(wildcards):
+    checkpoint_output = checkpoints.get_regions.get(**wildcards).output["dir"]
+    files = glob.glob(checkpoint_output + "/*bed")
+
+    # Extract values using list comprehension
+    split = lambda x: x.split('/')[-1]
+    chroms = list(set([split(f).split(".region.")[0].strip(".data") for f in files]))
+    chunks = list(set([split(f).split('.region')[1].strip(".bed") for f in files]))
+
+    filenames = expand(
+            "{{sample}}/freebayes_split/data.{chrom}.region.{chunk}.vcf", 
+            chrom=chroms, chunk=chunks
+    )
+    return filenames
+
+
+
+
+rule freebayes_merge:
+    input:
+        calls=aggregate_freebayes,
+    output:
+        vcf="{sample}/freebayes/{sample}.raw.vcf.tmp"
+    log:
+        "{sample}/freebayes/concat_vcf.log"
+    container:
+        config['apptainers']['sequana_tools']
+    shell:
+        """
+        bcftools concat {input.calls} > {output.vcf} 2>{log}
+        """
+
+rule vcf_merge:
+    input:
+        vcf="{sample}/freebayes/{sample}.raw.vcf.tmp"
+    output:
+        vcf="{sample}/freebayes/{sample}.raw.vcf"
+    container:
+        config['apptainers']['freebayes']
+    shell:
+        """
+
+        cat {input.vcf} | vcffirstheader | vcfstreamsort > {output.vcf}
+        """
+
 
 
 # =========================================================== annotation snpeff
@@ -514,7 +749,6 @@ if config["joint_freebayes"]["do"]:
     expected_output += ["joint_calling/joint_calling.filter.bcf"]
 
 
-
 # ================================================================= some stats for HTML report
 rule stats:
     input:
@@ -549,23 +783,24 @@ rule stats:
 
 # ======================================================================================== multiqc
 #
-if config["snpeff"]['do'] or config["sequana_coverage"]["do"]:
-    rule multiqc:
-        input:
-            expected_output
-        output:
-           "multiqc/multiqc_report.html"
-        params:
-            options=config["multiqc"]["options"],
-            input_directory=config['multiqc']['input_directory'],
-            config_file=config['multiqc']['config_file'],
-            modules=config['multiqc']['modules']
-        log:
-            "multiqc/multiqc.log"
-        container:
-            config["apptainers"]["multiqc"]
-        wrapper:
-           f"{manager.wrappers}/wrappers/multiqc"
+rule multiqc:
+    input:
+        expected_output
+    output:
+       "multiqc/multiqc_report.html"
+    params:
+        options=config["multiqc"]["options"],
+        input_directory=config['multiqc']['input_directory'],
+        config_file=config['multiqc']['config_file'],
+        modules=config['multiqc']['modules']
+    log:
+        "multiqc/multiqc.log"
+    resources:
+        **config["multiqc"]["resources"],
+    container:
+        config["apptainers"]["multiqc"]
+    wrapper:
+       f"{manager.wrappers}/wrappers/multiqc"
 
 
 # ======================================================================================== rulegraph
