@@ -14,6 +14,11 @@ mapping:
     "input_pattern":
         type: str
         required: True
+    "exclude_pattern":
+        type: str
+        required: False
+    "apptainers":
+        type: any
 
 
     "general":
@@ -27,12 +32,26 @@ mapping:
                 required: True
             "aligner_choice":
                 type: str
-                enum: [bwa, minimap2]
+                required: True
+                enum: [bwa, bwa_split, minimap2]
 
-    "apptainers":
-        type: any
 
-    "bwa_mem":
+
+    "bwa_index":
+        type: map
+        mapping:
+            "options":
+                type: str
+                required: False
+            "threads":
+                type: int
+                required: True
+                range: { min: 1 }
+            "resources":
+                type: any
+                required: True
+
+    "bwa":
         type: map
         mapping:
             "index_algorithm":
@@ -50,6 +69,33 @@ mapping:
                  mapping:
                      "mem":
                         type: str
+
+
+    "bwa_split":
+        type: map
+        mapping:
+            "nreads":
+                type: int
+                required: False
+            "index_algorithm":
+                type: str
+                required: False
+            "options":
+                type: str
+                required: False
+            "threads":
+                type: int
+                required: True
+                range: { min: 1 }
+            "tmp_directory":
+                type: str
+                required: False
+            "resources":
+                type: any
+                required: True
+
+
+
 
     "sequencing":
         type: map
@@ -73,6 +119,9 @@ mapping:
                 type: str
             "input_directory":
                 type: str
+            "resources":
+                type: any
+                required: true
 
     "minimap2":
         type: map
@@ -132,6 +181,9 @@ mapping:
         mapping:
             "options":
                 type: str
+            "chunksize":
+                type: int
+                range: { min: 10000 }
             "ploidy":
                 type: int
                 range: { min: 1 }
@@ -171,9 +223,6 @@ mapping:
                 range: { min: 0, max: 1}
                 required: False
                 default: 0.5
-            "genbank_file":
-                type: str
-                required: False
             "high_threshold":
                 type: float
                 range: { min: 2 }
@@ -184,9 +233,6 @@ mapping:
                 type: int
                 required: True
                 range: { min: 1, max: 3 }
-            "reference_file":
-                type: str
-                required: False
             "chunksize":
                 type: int
                 required: False
@@ -239,6 +285,8 @@ mapping:
             type: int
           "strand_ratio":
             type: float
+          "keep_polymorphic":
+            type: bool
 
     "joint_freebayes_vcf_filter":
         type: map
@@ -256,4 +304,49 @@ mapping:
         mapping:
             "options":
                 type: str
+
+
+    "fastqc":
+        type: map
+        mapping:
+            "options":
+                type: str
+                required: True
+            "threads":
+                type: int
+                required: True
+                range: { min: 1 }
+            "resources":
+                type: any
+                required: true
+
+    "fastp":
+      type: map
+      mapping:
+        "do":
+            type: bool
+            required: True
+        "options":
+            type: str
+        "minimum_length":
+            required: True
+            type: int
+        "adapters":
+            type: str
+            required: False
+        "quality":
+            type: int
+            range: {max: 40, min: 0}
+            required: False
+        "threads":
+            type: int
+            required: True
+            range: { min: 1 }
+        "disable_adapter_trimming":
+            type: bool
+        "disable_quality_filtering":
+            type: bool
+        "resources":
+            type: any
+            required: true
 

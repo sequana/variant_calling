@@ -50,7 +50,7 @@ help = init_click(
 @click.option(
     "--aligner-choice",
     "aligner",
-    type=click.Choice(["bwa", "minimap2"]),
+    type=click.Choice(["bwa", "bwa_split", "minimap2"]),
     default="bwa",
     show_default=True,
     help="The aligner in bwa / minimap2 .",
@@ -120,16 +120,17 @@ def main(**options):
             # print("." in cfg.annotation_file,  cfg.annotation_file.split(".")[-1])
             if "." not in cfg.general.annotation_file or cfg.general.annotation_file.split(".")[-1] not in [
                 "gbk",
+                "gbff",
                 "gff",
                 "gff3",
             ]:
                 click.echo(
-                    "The annotation file must in in .gbk or .gff or .gff3. You provided {cfg.general.annotation_file}"
+                    f"The annotation file must in genbank format with extension .gbk or .gbff, or GFF format with extension .gff or .gff3. You provided {cfg.general.annotation_file}"
                 )
                 sys.exit(1)
         else:
             cfg.snpeff.do = False
-            cfg["sequana_coverage"]["genbank_file"] = ""
+            #cfg["sequana_coverage"]["genbank_file"] = ""
 
     def fill_do_coverage():
         cfg["sequana_coverage"]["do"] = options.do_coverage
@@ -154,6 +155,8 @@ def main(**options):
     elif options["pacbio"]:
         cfg.general.aligner_choice = "minimap2"
         cfg.minimap2.options = "-x map-pb"
+    else:
+        cfg.general.aligner_choice = options.aligner
 
     if options["from_project"]:
         raise NotImplementedError
@@ -173,9 +176,9 @@ def main(**options):
 
     # seems to be a hardcoded values in bwa according to the documentation
     if N >= 2000000000:
-        cfg["bwa_mem"]["index_algorithm"] = "bwtsw"
+        cfg["bwa"]["index_algorithm"] = "bwtsw"
     else:
-        cfg["bwa_mem"]["index_algorithm"] = "is"
+        cfg["bwa"]["index_algorithm"] = "is"
 
     # finalise the command and save it; copy the snakemake. update the config
     # file and save it.
