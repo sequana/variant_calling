@@ -71,9 +71,9 @@ def test_check_output_ref_annot():
 
         assert vv == {'alternative': 'T',
              'chr': 'JB409847',
-             'depth': 23,
+             'depth': 24,
              'type': 'snp',
-             'frequency': '0.261',
+             'frequency': '0.250',
              'position': 2221,
              'reference': 'C',
              'strand_balance': '0.333'}
@@ -107,10 +107,10 @@ def test_check_output_no_annotation():
         del vv['fisher_pvalue']
         assert vv == {'alternative': 'T',
              'chr': 'JB409847',
-             'depth': 23,
+             'depth': 24,
              #'freebayes_score': 2.78452e-14,
              'type': 'snp',
-             'frequency': '0.261',
+             'frequency': '0.250',   # freebayes 1.3.9 gives 0.250 previous version were giving 0.261...
              'position': 2221,
              'reference': 'C',
              'strand_balance': '0.333'}

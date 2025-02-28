@@ -172,14 +172,15 @@ Then follow the instructions (prepare and execute the pipeline).
 
 You should end up with a summary.hml report.
 
-You can brwose the different samples (only one in this example) and get a table with variant calls:
 
+You can browse the different samples (only one in this example) and get a table with variant calls:
 
-    table.png
+    https://raw.githubusercontent.com/sequana/variant_calling/refs/heads/main/doc/table.png
 
-If you set the coverage one, (not recommended for eukaryotes), you should see this kind of plots::
+If you set the coverage one, (not recommended for eukaryotes), you should see this kind of plots:
 
-    coverage.png
+    https://raw.githubusercontent.com/sequana/variant_calling/refs/heads/main/doc/coverage.png
+
 
 
 
