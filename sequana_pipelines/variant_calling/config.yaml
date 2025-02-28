@@ -15,7 +15,7 @@ sequana_wrappers: "v24.1.14"
 input_directory:
 input_readtag: _R[12]_
 input_pattern: '*fastq.gz'
-
+exclude_pattern: 
 
 ###########################################################################
 # General section:
@@ -23,7 +23,7 @@ input_pattern: '*fastq.gz'
 # :Parameters:
 #
 #
-# - aligner_choice: either bwa or minimap2
+# - aligner_choice: either bwa or minimap2 or bwa_split
 #
 general:
     aligner_choice: bwa
@@ -31,12 +31,18 @@ general:
     reference_file:
 
 apptainers:
-    sequana_coverage: "https://zenodo.org/record/10209929/files/sequana_0.16.1.img"
-    sequana_tools: "https://zenodo.org/record/7963917/files/sequana_tools_0.15.1.img"
+    #bwa: https://zenodo.org/record/7970243/files/bwa_0.7.17.img
+    bwa: "https://zenodo.org/record/14945560/files/sequana_tools_0.19.1.img"
+    samtools: https://zenodo.org/record/7437898/files/samtools_1.16.1.img
+    seqkit: https://zenodo.org/record/7821924/files/seqkit_2.4.0.img
+    sequana_coverage: https://zenodo.org/record/14945560/files/sequana_tools_0.19.1.img
+    sequana_tools: "https://zenodo.org/record/14945560/files/sequana_tools_0.19.1.img"
     graphviz: "https://zenodo.org/record/7928262/files/graphviz_7.0.5.img"
-    minimap2: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
+    minimap2: "https://zenodo.org/record/5799482/files/minimap2_2.23.0.img"
     multiqc: "https://zenodo.org/record/10205070/files/multiqc_1.16.0.img"
-    freebayes: "https://zenodo.org/record/10259279/files/freebayes_1.2.0.img"
+    freebayes: "https://zenodo.org/record/14930911/files/freebayes_1.3.9.img"
+    fastqc: https://zenodo.org/record/7015004/files/fastqc_0.11.9-py3.img
+    fastp: https://zenodo.org/record/7319782/files/fastp_0.23.2.img
 
 # you may add ID, PF, SM, PU, LB read tags
 #
@@ -81,7 +87,7 @@ samtools_depth:
 # - threads: number of threads to be used.
 # - tmp_directory: temporary directory
 #
-bwa_mem:
+bwa:
     index_algorithm: is
     options: -T 30
     threads: 4
@@ -89,13 +95,33 @@ bwa_mem:
     resources:
         mem: 8G
 
+#############################################################################
+# BWA MEM indexing
+#
+bwa_index:
+    options: ''
+    threads: 4
+    resources:
+        mem: 8G
+
+
+
+bwa_split:
+    nreads: 100000
+    index_algorithm: is
+    options: -T 30 -M
+    threads: 4
+    tmp_directory: ./tmp
+    resources:
+        mem: 8G
+
+
 ##############################################################################
 # SnpEff - Annotate variants detected
 #
 # :Parameters:
 #
 # - do: if unchecked, this rule is ignored.
-# - reference: genbank file.
 # - options: any options recognised by snpEff.
 # - build_options: use at the build stage of snpEff.
 #       depending on the GFF, you may need to add options to skip some sanity checks
@@ -114,7 +140,7 @@ bwa_mem:
 #
 snpeff:
     do: true
-    build_options: # -noCheckCds -noCheckProtein
+    build_options: " -noCheckCds -noCheckProtein"
     options: -no-downstream -no-upstream
     resources:
         mem: 8G
@@ -129,6 +155,7 @@ snpeff:
 #
 freebayes:
     ploidy: 1
+    chunksize: 100000
     options: --legacy-gls
     resources:
         mem: 8G
@@ -197,7 +224,6 @@ sequana_coverage:
     high_threshold: 4.0
     low_threshold: -4.0
     mixture_models: 2
-    reference_file: ''
     options: ""
     resources:
         mem: 8G
@@ -222,6 +248,7 @@ freebayes_vcf_filter:
     forward_depth: 3
     reverse_depth: 3
     strand_ratio: 0.2
+    keep_polymorphic: True
 
 ##############################################################################
 # Filter Joint VCF
@@ -238,7 +265,58 @@ joint_freebayes_vcf_filter:
     min_depth: 20
 
 
-###########################################################################
+#############################################################################
+# -Q should disable the quality filter
+#
+# Quality filtering only limits the N base number (-n, --n_base_limit) 
+# meaning if 5 Ns are found, the read is discarded, 
+# -q is the quality value se to Q15 to be qualified; If more than 40% of bases
+# are unqualified, the read is discarded.
+# You can also filter reads by average quality score using -e QUAL_score
+#
+# minimum length is set to 15 by default
+#
+# Adapter trimming is set by default. Can be disable with -A
+# For adapters, this is automatic but you can be specific using 
+# --adapter_sequence for read1, and --adapter_sequence_r2 for read2.
+# The --cut_tail moves a sliding window from tail (3') to front, drop the bases 
+# in the window if its mean quality is below cut_mean_quality, stop otherwise. 
+# Use cut_tail_window_size to set the widnow size (default 4)), and 
+# cut_tail_mean_quality to set the mean quality threshold (default 20)
+# Other useful options: --disable_adapter_trimming and --disable_quality_filtering.
+# or -n 5 (minimum number of Ns required to discard a read)
+fastp:
+    do: true
+    options: ' --cut_tail '
+    minimum_length: 20
+    adapters: ''
+    quality: 15
+    threads: 4
+    disable_adapter_trimming: false
+    disable_quality_filtering: false
+    resources:
+        mem: 8G
+
+#################################################################
+# FastQC section
+#
+# :Parameters:
+#
+# - options: string with any valid FastQC options
+#
+fastqc:
+    options: --nogroup
+    threads: 4
+    resources:
+        mem: 4G
+
+
+
+
+
+
+
+#############################################################################
 #   MultiQC aggregates results from bioinformatics analyses across many
 #   samples into a single report.
 #
@@ -249,8 +327,11 @@ joint_freebayes_vcf_filter:
 # - config_file: by default, we use sequana RNA-seq multiqc_config file. 
 #       If you want your own multiqc, fill this entry
 multiqc:
-    options: -p -f
-    modules: snpeff sequana_coverage
+    options: -p -f 
+    modules: snpeff sequana_coverage fastqc bcftools fastp
     input_directory: .
     config_file: multiqc_config.yaml
+    resources:
+        mem: 8G
+
 
