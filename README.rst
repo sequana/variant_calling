@@ -172,6 +172,7 @@ Then follow the instructions (prepare and execute the pipeline).
 
 You should end up with a summary.hml report.
 
+
 You can browse the different samples (only one in this example) and get a table with variant calls:
 
     https://raw.githubusercontent.com/sequana/variant_calling/refs/heads/main/doc/table.png
