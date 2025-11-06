@@ -14,15 +14,20 @@
 # Note that all of the values below are set to the MultiQC defaults.
 # It's recommended that you delete any that you don't need.
 
+
+#------------------------------------------------------------------------------
+#        TO CHANGE
+#-------------------------------------------------------------------------------
+
 # Title to use for the report.
-title: "sequana_variant_calling MultiQC summary"
-subtitle: "Variant Calling analysis" 
-intro_text: "Report summarising variant calls and mapping of your FastQ files"
+title: "sequana_rnaseq MultiQC summary"
+subtitle: "RNA-seq analysis" 
+intro_text: "Report summarising cleaning (cutadapt section) and mapping (stat/bowtie sections) of your FastQ files, as well as feature counts (featureCounts section) and quick contaminant search (fastq screen section)"
 
 # Add generic information to the top of reports
 report_header_info:
    - Authors: '<a href="http://github.com/sequana/sequana">Sequana developers</a>'
-   - Want to know more?: 'See the <a href="http://sequana.readthedocs.io" target="_blank">Sequana</a> and <a href="http://github.com/sequana/sequana_variant_calling/" target="_blank"> sequana_variant_calling pipeline</a> documentation.'
+   - Want to know more?: 'See the <a href="http://sequana.readthedocs.io" target="_blank">Sequana</a> and <a href="http://github.com/sequana/sequana_rnaseq/" target="_blank"> sequana_rnaseq pipeline</a> documentation.'
    - Citations: 'If you used Sequanix, Sequana, Sequana_coverage tool, or any Sequana pipelines, please see <a href="http://sequana.readthedocs.io">How to cite ?</a> section. In particular, if you use this report in a publication, please cite Sequana.'
    - Contact E-mail: ''
 #   - Project Type: 'Differential gene expression'
@@ -61,7 +66,7 @@ extra_fn_clean_exts:
     - type: remove
       pattern: '.sorted'
     - type: regex
-      pattern: '^Sample_\d+'
+      pattern: '_S\d+'
 
 
 # Ignore these files / directories / paths when searching for logs
@@ -73,12 +78,15 @@ fn_ignore_files:
 fn_ignore_dirs:
     - .sequana
     - .snakemake
-    - .sequana
+    - multiqc
+    - logs
+
+# We want to ignore the 3 strand case to use only the final ones in
+# post_analysis/feature_counts
 fn_ignore_paths:
-    - '*/path/to/*_files/'
+    - "*/feature_counts/*"
 
 # Ignore files larger than this when searcing for logs (bytes)
-# fastqc files can be as large as 1Mb
 log_filesize_limit: 5000000
 
 # MultiQC skips a couple of debug messages when searching files as the
@@ -105,45 +113,60 @@ max_table_rows: 500              # Swap tables for a beeswarm plot above this
 sp:
     star:
         fn: '*Log.final.out'
-
-    sequana_bamtools_stats:
-        fn: "sequana_bamtools_stats*.txt"
-    sequana_coverage:
-        fn: "sequana_summary_coverage.json"
+    cutadapt:
+        fn: 'cutadapt.txt'
     fastp:
         fn: '*fastp*json'
-
-
-# Specify a custom logo to add to reports (uncomment to use)
-custom_logo: .sequana/logo.png         # '/path/to/logo.png'
-custom_logo_url: https://github.com/sequana/sequana_mapper
-custom_logo_title: "Sequana pipeline page (mapper)"
-subtitle: '<a href="https://github.com/sequana/sequana_mapper">Issues, stars, comments: visit the sequana_mapper page.</a>'
-intro_text: ""
-
-# Add generic information to the top of reports
-report_header_info:
-    - Authors:: '<a href="http://github.com/sequana/sequana">Sequana developers'
-    #- Another field:: 'Loaded from <code>multiqc_config_example.yaml</code>'
-    #- Something different:: 'You can put any key-value pairs here'
-    - Want to know more?: 'See the <a href="http://sequana.readthedocs.io" target="_blank">Sequana documentation</a>'
-    - Citations:: 'If you used Sequanix, Sequana or Sequana_coverage tool, please see <a href="http://sequana.readthedocs.io">How to cite ?</a> section. In particular, if you use this report in a publication, please cite Sequana. You may want to consider adding a note in the acknowledgement to thank bioinformaticians or bioanalysts for their feedbacks.'
+    #rna_seqc/metrics:
+    #    fn: "*metrics.tsv"
+    #rna_seqc/coverage:
+    #    fn: "*coverage.tsv"
 
 # Overwrite the defaults of which table columns are visible by default
+#
+read_count_prefix: ''
+read_count_multiplier: 1
+
 table_columns_visible:
     FastQC:
         percent_fails: False
         total_sequences: True
-        percent_duplicates: True
-        percent_gc: True
-        avg_sequence_length: True
+        percent_gc: False
+    fastp:
+        pct_duplication: False
+        after_filtering_gc_content: False
+    Bowtie 1:
+        reads_aligned_percentage: False
+        reads_aligned: False
+    picard:
+        PERCENT_DUPLICATION: False
 
+top_modules:
+  - fastqc
+  - fastp
+  - bowtie1
+  - bowtie2
+  - salmon
+  - star
+  - featureCounts
 
 module_order:
   - fastqc
   - fastp
-  - bwa
+  - rseqc
+  - markduplicates
+  - picard
+  - bowtie1
+  - bowtie2
+  - salmon
+  - star
   - featureCounts
-  - sequana_coverage
+
+remove_sections:
+  - fastqc_status_checks
+  - fastqc_per_base_n_content
 
 
+#fastqc_config:
+#fastqc_theoretical_gc: 'mm10_genome'
+#
