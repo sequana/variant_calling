@@ -16,6 +16,6 @@ dependencies:
   - minimap2
   - pip
   - pip:
-    - "sequana>=0.19.1"
+    - "sequana>=0.19.4"
 
 
