@@ -1,5 +1,8 @@
 bwa
+bcftools
 freebayes
+fastp
+fastqc
 picard
 sambamba
 samtools

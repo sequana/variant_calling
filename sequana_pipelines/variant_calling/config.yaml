@@ -32,15 +32,15 @@ general:
 
 apptainers:
     #bwa: https://zenodo.org/record/7970243/files/bwa_0.7.17.img
-    bwa: "https://zenodo.org/record/14945560/files/sequana_tools_0.19.1.img"
+    bwa: https://zenodo.org/record/17535070/files/sequana_tools_0.19.3.img
     samtools: https://zenodo.org/record/7437898/files/samtools_1.16.1.img
     seqkit: https://zenodo.org/record/7821924/files/seqkit_2.4.0.img
-    sequana_coverage: https://zenodo.org/record/14945560/files/sequana_tools_0.19.1.img
-    sequana_tools: "https://zenodo.org/record/14945560/files/sequana_tools_0.19.1.img"
-    graphviz: "https://zenodo.org/record/7928262/files/graphviz_7.0.5.img"
-    minimap2: "https://zenodo.org/record/5799482/files/minimap2_2.23.0.img"
-    multiqc: "https://zenodo.org/record/10205070/files/multiqc_1.16.0.img"
-    freebayes: "https://zenodo.org/record/14930911/files/freebayes_1.3.9.img"
+    sequana_coverage: https://zenodo.org/record/17535070/files/sequana_tools_0.19.3.img
+    sequana_tools: https://zenodo.org/record/17535070/files/sequana_tools_0.19.3.img
+    graphviz: https://zenodo.org/record/7928262/files/graphviz_7.0.5.img
+    minimap2: https://zenodo.org/record/17535070/files/sequana_tools_0.19.3.img
+    multiqc: https://zenodo.org/record/17100751/files/multiqc_1.27.0-zenodo1.img
+    freebayes: https://zenodo.org/record/14930911/files/freebayes_1.3.9.img
     fastqc: https://zenodo.org/record/7015004/files/fastqc_0.11.9-py3.img
     fastp: https://zenodo.org/record/7319782/files/fastp_0.23.2.img
 
@@ -107,7 +107,7 @@ bwa_index:
 
 
 bwa_split:
-    nreads: 100000
+    nreads: 1000000
     index_algorithm: is
     options: -T 30 -M
     threads: 4
@@ -151,11 +151,13 @@ snpeff:
 # :Parameters:
 #
 # - ploidy: set the ploidy of your samples.
-# - options: any options recognised by freebayes.
-#
+# - options: any options recognised by freebayes. One useful options is
+#  --min-alternate-fraction to decreasy minimal frequency to e.g.  1% 
+#  since default if 5%
+# 
 freebayes:
     ploidy: 1
-    chunksize: 100000
+    chunksize: 1000000
     options: --legacy-gls
     resources:
         mem: 8G
@@ -187,6 +189,8 @@ sambamba_markdup:
     remove_duplicates: false
     tmp_directory: ./tmp/
     options:
+    resources:
+        mem: 8G
 
 ##############################################################################
 # Filter reads with a mapping score lower than an integer 
@@ -200,6 +204,8 @@ sambamba_filter:
     do: true
     threshold: 30
     options:
+    resources:
+        mem: 8G
 
 ##############################################################################
 # Sequana coverage - Analyse the coverage of the mapping 
@@ -287,8 +293,8 @@ joint_freebayes_vcf_filter:
 # or -n 5 (minimum number of Ns required to discard a read)
 fastp:
     do: true
-    options: ' --cut_tail '
-    minimum_length: 20
+    options: '--cut_tail'
+    min_length_required: 20
     adapters: ''
     quality: 15
     threads: 4
@@ -305,6 +311,7 @@ fastp:
 # - options: string with any valid FastQC options
 #
 fastqc:
+    do: true
     options: --nogroup
     threads: 4
     resources:

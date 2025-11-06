@@ -70,14 +70,6 @@ help = init_click(
     help="The annotation for snpeff. This is optional but highly recommended to obtain meaningful HTML report.",
 )
 @click.option(
-    "--do-coverage",
-    "do_coverage",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="perform the coverage analysis using sequana_coverage.",
-)
-@click.option(
     "--nanopore",
     is_flag=True,
     default=False,
@@ -152,9 +144,13 @@ def main(**options):
     if options["nanopore"]:
         cfg.general.aligner_choice = "minimap2"
         cfg.minimap2.options = "-x map-ont"
+        cfg.input_readtag = ""
+        cfg.fastqc.do = False
     elif options["pacbio"]:
         cfg.general.aligner_choice = "minimap2"
         cfg.minimap2.options = "-x map-pb"
+        cfg.input_readtag = ""
+        cfg.fastqc.do = False
     else:
         cfg.general.aligner_choice = options.aligner
 

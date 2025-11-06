@@ -9,9 +9,9 @@
 .. image:: https://github.com/sequana/variant_calling/actions/workflows/main.yml/badge.svg
    :target: https://github.com/sequana/variant_calling/actions
 
-.. image:: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C3.10-blue.svg
+.. image:: https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C3.12-blue.svg
     :target: https://pypi.python.org/pypi/sequana
-    :alt: Python 3.8 | 3.9 | 3.10
+    :alt: Python 3.10 | 3.11 | 3.12
 
 This is the **variant_calling** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
 
@@ -152,7 +152,7 @@ and the reference genome with its annnotation::
 
 
 Initiate the pipeline::
- 
+
     sequana_variant_calling --input-directory . --reference-file ecoli.fa --aligner-choice bwa_split \
         --do-coverage --annotation-file ecoli.gff  \
         --use-apptainer --apptainer-prefix ~/.sequana/apptainers \ 
@@ -164,9 +164,7 @@ Explication:
 - we use the reference genome ecoli.fa (--reference-file) and its annotation for SNPeff (--annotation-file)
 - we use the sequana_coverage tool (True by default) to get coverage plots.
 - we use --input-directory to indicatre where to find the input files
-- This data set is paired. In NGS, it is common to have _R1_ and _R2_ tags to differentiate the 2 files. Here the tag
-are _1 and _2. In sequana we define the a wildcard for the read tag. So here we tell the software that thex ecpted tag
-follow this pattern: "_[12]." and everything is then automatic.
+- This data set is paired. In NGS, it is common to have _R1_ and _R2_ tags to differentiate the 2 files. Here the tags are `_1` and `_2`. In sequana we define the a wildcard for the read tag. So here we tell the software that thex expected tags follow this pattern: "_[12]." and everything is then automatic.
 
 Then follow the instructions (prepare and execute the pipeline).
 
@@ -175,11 +173,11 @@ You should end up with a summary.hml report.
 
 You can browse the different samples (only one in this example) and get a table with variant calls:
 
-    https://raw.githubusercontent.com/sequana/variant_calling/refs/heads/main/doc/table.png
+.. image:: https://raw.githubusercontent.com/sequana/variant_calling/refs/heads/main/doc/table.png
 
 If you set the coverage one, (not recommended for eukaryotes), you should see this kind of plots:
 
-    https://raw.githubusercontent.com/sequana/variant_calling/refs/heads/main/doc/coverage.png
+.. image:: https://raw.githubusercontent.com/sequana/variant_calling/refs/heads/main/doc/coverage.png
 
 
 
@@ -191,6 +189,12 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.4.0     * handles long reads data. Use sequana html_report to create the VCF
+            html reports instead of wrapper. More dynamic. Updated some 
+            containers, in particular for sequana_coverage.
+          * Fixed regression in bwa mapping
+          * Fixed ordering of contigs on genomecov that was not sorted in the 
+            same way as samtools in some cases. 
 1.3.0     * Updated version to use latest damona containers and latest 
             sequana version 0.19.1. added plot in HTML report with distribution
             of variants. added tutorial. added bwa_split and freebaye split to 

@@ -1,6 +1,8 @@
 # Schema validator for the variant_calling pipeline
 # author: Thomas Cokelaer
 
+
+
 type: map
 mapping:
     "sequana_wrappers":
@@ -164,6 +166,11 @@ mapping:
                 type: str
             "options":
                 type: str
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "sambamba_filter":
         type: map
@@ -175,6 +182,11 @@ mapping:
                 range: { min: 0 }
             "options":
                 type: str
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "freebayes":
         type: map
@@ -293,9 +305,9 @@ mapping:
         mapping:
           "freebayes_score":
               type: int
-          "frequency": 
+          "frequency":
               type: float
-          "min_depth": 
+          "min_depth":
               type: int
 
 
@@ -309,6 +321,9 @@ mapping:
     "fastqc":
         type: map
         mapping:
+            "do":
+                type: bool
+                required: True
             "options":
                 type: str
                 required: True
@@ -328,7 +343,7 @@ mapping:
             required: True
         "options":
             type: str
-        "minimum_length":
+        "min_length_required":
             required: True
             type: int
         "adapters":

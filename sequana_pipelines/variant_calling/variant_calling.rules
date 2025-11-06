@@ -42,6 +42,14 @@ chunksize = config['freebayes']['chunksize']
 if len(manager.samples) == 1:
     config["joint_freebayes"]["do"] = False
 
+# Hack
+if not config['input_readtag'] or config['input_readtag'].strip() == "":
+    # undesired feature right now. if input_read_tag is empty,
+    # samples are not list but string. fastp wrappers expects list...
+    for k,v in manager.samples.items():
+        if not isinstance(manager.samples[k], list):
+            manager.samples[k] = [v]
+
 
 # ================================================== Define outputs
 expected_output = []
@@ -146,26 +154,48 @@ if manager.config.fastp.do:
             f"{manager.wrappers}/wrappers/fastp"
 
 
+if config['fastqc']['do']:
+    rule fastqc:
+        input:
+            get_input_data()
+        output:
+            done = "{sample}/fastqc/fastqc.done"
+        params:
+            options= config["fastqc"]["options"],
+            working_directory= "{sample}/fastqc"
+        threads: config["fastqc"]["threads"]
+        log:
+            "{sample}/fastqc/fastqc.log"
+        resources:
+            **config["fastqc"]['resources']
+        container:
+            config['apptainers']['fastqc']
+        wrapper:
+            f"{manager.wrappers}/wrappers/fastqc"
+    expected_output.extend(expand("{sample}/fastqc/fastqc.done", sample=manager.samples))
 
-rule fastqc:
+
+
+# freebayes split required indexing in BWA format
+# ========================================================= bwa indexing
+rule bwa_index:
     input:
-        get_input_data()
+        reference=new_reference
     output:
-        done = "{sample}/fastqc/fastqc.done"
-    params:
-        options= config["fastqc"]["options"],
-        working_directory= "{sample}/fastqc"
-    threads: config["fastqc"]["threads"]
+        bwa_bwt=new_reference + ".bwt",
+        fai=new_reference + ".fai"
     log:
-        "{sample}/fastqc/fastqc.log"
-    resources:
-        **config["fastqc"]['resources']
+        "reference/build.log"
+    params:
+        options=config['bwa'].get('index_options', ""),
+        index_algorithm=config['bwa'].get('index_algorithm', "is")
     container:
-        config['apptainers']['fastqc']
+        config['apptainers']['sequana_tools']
+    threads: 2
+    resources:
+        **config["bwa_index"]["resources"],
     wrapper:
-        f"{manager.wrappers}/wrappers/fastqc"
-expected_output.extend(expand("{sample}/fastqc/fastqc.done", sample=manager.samples))
-
+        f"{manager.wrappers}/wrappers/bwa/build"
 
 
 # ========================================================= BWA
@@ -177,25 +207,6 @@ if not config["input_pattern"].endswith("bam"):
     if aligner in ["bwa", "bwa_split"]:
         reference = config["general"]["reference_file"]
 
-        # ========================================================= bwa indexing
-        rule bwa_index:
-            input:
-                reference=new_reference
-            output:
-                bwa_bwt=new_reference + ".bwt",
-                fai=new_reference + ".fai"
-            log:
-                "reference/build.log"
-            params:
-                options=config['bwa'].get('index_options', ""),
-                index_algorithm=config['bwa'].get('index_algorithm', "is")
-            container:
-                config['apptainers']['sequana_tools']
-            threads: 2
-            resources:
-                **config["bwa_index"]["resources"],
-            wrapper:
-                f"{manager.wrappers}/wrappers/bwa/build"
 
     if aligner == "bwa":
 
@@ -364,6 +375,8 @@ if config["sambamba_markdup"]["do"]:
             remove_duplicates=config["sambamba_markdup"]["remove_duplicates"]
         container:
             config['apptainers']['sequana_tools']
+        resources:
+            **config["sambamba_markdup"]["resources"]
         wrapper:
             f"{manager.wrappers}/wrappers/sambamba_markdup"
 
@@ -390,6 +403,8 @@ if config["sambamba_filter"]["do"]:
             options=config["sambamba_filter"]["options"]
         container:
             config['apptainers']['sequana_tools']
+        resources:
+            **config["sambamba_filter"]["resources"]
         wrapper:
             f"{manager.wrappers}/wrappers/sambamba_filter"
 
@@ -405,9 +420,11 @@ if config["sequana_coverage"]["do"]:
 
     rule bedtools_depth:
         input:
-            __samtools_depth__input
+            bam=__samtools_depth__input,
+            fai= f"{new_reference}"
         output:
-            "{sample}/bedtools_depth/{sample}.bed"
+            bed="{sample}/bedtools_depth/{sample}.bed",
+            order="{sample}/bedtools_depth/order.txt"
         log:
             "{sample}/bedtools_depth/{sample}.log"
         resources:
@@ -416,7 +433,18 @@ if config["sequana_coverage"]["do"]:
             config['apptainers']['sequana_tools']
         shell:
             """
-            bedtools genomecov -d -ibam {input} > {output}
+            # use fai to make sure it is same order as samtools
+            #
+            samtools view -H {input.bam} | grep "^@SQ" | awk '{{for(i=1;i<=NF;i++) if($i~/^SN:/){{split($i,a,":"); print a[2]}}}}' > {output.order}
+
+            # Reorder bedtools output by contig order, preserving within-contig order
+            bedtools genomecov -d -ibam {input.bam} \
+                | awk 'NR==FNR {{order[$1]=++n; next}} {{print order[$1] "\t" $0}}' {output.order} - \
+                | sort -k1,1n -s \
+                | cut -f2- \
+                > {output.bed}
+
+
             """
 
     rule samtools_depth:
@@ -525,7 +553,7 @@ rule freebayes_intermediate:
         #rules.get_regions.output.ready,
         ref= new_reference,
         fai= f"{new_reference}.fai",
-        bam="{sample}/add_read_group/{sample}.sorted.bam",
+        bam=__freebayes__input,
         region=get_freebayes_input()
     params:
         ploidy=config["freebayes"]["ploidy"],
@@ -550,15 +578,23 @@ def aggregate_freebayes(wildcards):
 
     # Extract values using list comprehension
     split = lambda x: x.split('/')[-1]
-    chroms = list(set([split(f).split(".region.")[0].strip(".data") for f in files]))
-    chunks = list(set([split(f).split('.region')[1].strip(".bed") for f in files]))
+
+    chroms = [split(f).split(".region.")[0].strip(".data") for f in files]
+    chunks = [split(f).split('.region')[1].strip(".bed") for f in files]
+
+    # Sort by chroms (lexicographically) and chunks (numerically)
+    sorted_pairs = sorted(zip(chroms, chunks), key=lambda x: (x[0], int(x[1])))
+
+    # Unpack sorted values
+    chroms_sorted, chunks_sorted = zip(*sorted_pairs)
 
     filenames = expand(
-            "{{sample}}/freebayes_split/data.{chrom}.region.{chunk}.vcf", 
-            chrom=chroms, chunk=chunks
+        "{{sample}}/freebayes_split/data.{chrom}.region.{chunk}.vcf", zip,
+        chrom=chroms_sorted,
+        chunk=chunks_sorted
     )
-    return filenames
 
+    return filenames
 
 
 
@@ -635,12 +671,15 @@ rule freebayes_vcf_filter:
         html="{sample}/variant_calling.html"
     params:
         filter_dict=config["freebayes_vcf_filter"]
-    resources:
-        **config["freebayes"]["resources"]
-    container:
-        config['apptainers']['sequana_tools']
-    wrapper:
-        f"{manager.wrappers}/wrappers/freebayes_vcf_filter"
+    shell:
+        """
+        # requires sequana 0.19.4
+        sequana html-report {input} \
+            --output-vcf-file {output.vcf} \
+            --output-csv-file {output.csv} \
+            --output-directory {wildcards.sample}
+        """
+
 
 
 rule vcf2bcf:
