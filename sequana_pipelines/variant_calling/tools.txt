@@ -1,4 +1,5 @@
 bwa
+bcftools
 freebayes
 fastp
 fastqc
