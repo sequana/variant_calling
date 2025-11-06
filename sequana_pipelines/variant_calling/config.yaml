@@ -151,7 +151,7 @@ snpeff:
 # :Parameters:
 #
 # - ploidy: set the ploidy of your samples.
-# - options: any options recognised by freebayes. One usefule options is
+# - options: any options recognised by freebayes. One useful options is
 #  --min-alternate-fraction to decreasy minimal frequency to e.g.  1% 
 #  since default if 5%
 # 

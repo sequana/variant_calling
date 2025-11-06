@@ -164,7 +164,7 @@ Explication:
 - we use the reference genome ecoli.fa (--reference-file) and its annotation for SNPeff (--annotation-file)
 - we use the sequana_coverage tool (True by default) to get coverage plots.
 - we use --input-directory to indicatre where to find the input files
-- This data set is paired. In NGS, it is common to have _R1_ and _R2_ tags to differentiate the 2 files. Here the tag are `_1` and `_2`. In sequana we define the a wildcard for the read tag. So here we tell the software that thex ecpted tag follow this pattern: "_[12]." and everything is then automatic.
+- This data set is paired. In NGS, it is common to have _R1_ and _R2_ tags to differentiate the 2 files. Here the tags are `_1` and `_2`. In sequana we define the a wildcard for the read tag. So here we tell the software that thex expected tags follow this pattern: "_[12]." and everything is then automatic.
 
 Then follow the instructions (prepare and execute the pipeline).
 
@@ -193,7 +193,7 @@ Version   Description
             html reports instead of wrapper. More dynamic. Updated some 
             containers, in particular for sequana_coverage.
           * Fixed regression in bwa mapping
-          * Fixed ordered of contigs on genomecov that was not sorted in the 
+          * Fixed ordering of contigs on genomecov that was not sorted in the 
             same way as samtools in some cases. 
 1.3.0     * Updated version to use latest damona containers and latest 
             sequana version 0.19.1. added plot in HTML report with distribution
