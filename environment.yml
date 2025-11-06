@@ -10,6 +10,8 @@ dependencies:
   - bwa
   - 'snpeff==5.1d'
   - sambamba
+  - fastp
+  - fastqc
   - picard>2.26
   - samtools>=1.15
   - bamtools
