@@ -5,8 +5,6 @@
 
 type: map
 mapping:
-    "sequana_wrappers":
-        type: str
     "input_directory":
         type: str
         required: True
@@ -315,6 +313,14 @@ mapping:
         type: map
         mapping:
             "options":
+                type: str
+            "PL":
+                type: str
+            "LB":
+                type: str
+            "PU":
+                type: str
+            "ID":
                 type: str
 
 

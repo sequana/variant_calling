@@ -8,8 +8,6 @@
 # use it, otherwise use input_samples.
 # ============================================================================
 #
-sequana_wrappers: "v24.1.14"
-
 
 # Mandatory fields
 input_directory:
@@ -32,23 +30,26 @@ general:
 
 apptainers:
     #bwa: https://zenodo.org/record/7970243/files/bwa_0.7.17.img
-    bwa: https://zenodo.org/record/17535070/files/sequana_tools_0.19.3.img
+    bwa: https://zenodo.org/record/18257162/files/sequana_tools_26.1.14.img
     samtools: https://zenodo.org/record/7437898/files/samtools_1.16.1.img
     seqkit: https://zenodo.org/record/7821924/files/seqkit_2.4.0.img
-    sequana_coverage: https://zenodo.org/record/17535070/files/sequana_tools_0.19.3.img
-    sequana_tools: https://zenodo.org/record/17535070/files/sequana_tools_0.19.3.img
+    sequana_coverage: https://zenodo.org/record/18257162/files/sequana_tools_26.1.14.img
+    sequana_tools: https://zenodo.org/record/18257162/files/sequana_tools_26.1.14.img
     graphviz: https://zenodo.org/record/7928262/files/graphviz_7.0.5.img
-    minimap2: https://zenodo.org/record/17535070/files/sequana_tools_0.19.3.img
+    minimap2: https://zenodo.org/record/18257162/files/sequana_tools_26.1.14.img
     multiqc: https://zenodo.org/record/17100751/files/multiqc_1.27.0-zenodo1.img
     freebayes: https://zenodo.org/record/14930911/files/freebayes_1.3.9.img
     fastqc: https://zenodo.org/record/7015004/files/fastqc_0.11.9-py3.img
-    fastp: https://zenodo.org/record/7319782/files/fastp_0.23.2.img
+    fastp: https://zenodo.org/record/17097941/files/fastp_1.0.1.img
 
 # you may add ID, PF, SM, PU, LB read tags
 #
 add_read_group:
-    #PU: Illumina
     options: ''
+    PL: Illumina
+    LB: unknown
+    PU: unknown
+    ID: '1'
 
 
 minimap2:
@@ -335,7 +336,7 @@ fastqc:
 #       If you want your own multiqc, fill this entry
 multiqc:
     options: -p -f 
-    modules: snpeff sequana_coverage fastqc bcftools fastp
+    modules: snpeff sequana_coverage fastqc bcftools fastp sambamba
     input_directory: .
     config_file: multiqc_config.yaml
     resources:

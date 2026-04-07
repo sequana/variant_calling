@@ -9,9 +9,9 @@
 .. image:: https://github.com/sequana/variant_calling/actions/workflows/main.yml/badge.svg
    :target: https://github.com/sequana/variant_calling/actions
 
-.. image:: https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C3.12-blue.svg
+.. image:: https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg
     :target: https://pypi.python.org/pypi/sequana
-    :alt: Python 3.10 | 3.11 | 3.12
+    :alt: Python 3.11 | 3.12
 
 This is the **variant_calling** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
 
@@ -194,7 +194,8 @@ Version   Description
             containers, in particular for sequana_coverage.
           * Fixed regression in bwa mapping
           * Fixed ordering of contigs on genomecov that was not sorted in the 
-            same way as samtools in some cases. 
+            same way as samtools in some cases.
+          * use new sequana-wrappers.shells (instead of wrappers) 
 1.3.0     * Updated version to use latest damona containers and latest 
             sequana version 0.19.1. added plot in HTML report with distribution
             of variants. added tutorial. added bwa_split and freebaye split to 
