@@ -90,8 +90,16 @@ if config["snpeff"]["do"]:
             **config["snpeff"]["resources"]
         container:
             config['apptainers']['sequana_tools']
-        wrapper:
-            f"{manager.wrappers}/wrappers/snpeff_add_locus_in_fasta"
+        run:
+            from sequana import SnpEff
+            ann = str(input[1])
+            if ann.endswith(".gbk"):
+                snpeff = SnpEff(ann, log=str(log[0]), build_options=params.options)
+            elif ann.endswith("gff") or ann.endswith("gff3"):
+                snpeff = SnpEff(ann, log=str(log[0]), fastafile=str(input[0]), build_options=params.options)
+            else:
+                raise IOError("Annotation file must end with .gbk, .gff, or .gff3")
+            snpeff.add_locus_in_fasta(str(input[0]), str(output[0]))
 
 # Copy the reference index if it exists
 elif not os.path.isfile(reference_file + ".fai"):
@@ -120,38 +128,59 @@ def get_input_data():
 
 if manager.config.fastp.do:
 
-    fastp_outputs = get_input_data()
-
     _quality = config["fastp"].get("quality", 15)
     _minlen = config["fastp"].get("minimum_length", 20)
     options_fastp = config["fastp"].get("options", "")
     options_fastp += f" --qualified_quality_phred {_quality}"
     options_fastp += f" -l {_minlen}"
     if config["fastp"].get("disable_adapter_trimming", False) is True:
-        options_fastp += "--disable_adapter_trimming"
+        options_fastp += " --disable_adapter_trimming"
     if config["fastp"].get("disable_quality_filtering", False) is True:
-        options_fastp += "--disable_quality_filtering"
+        options_fastp += " --disable_quality_filtering"
 
-    rule fastp:
-        input:
-            sample=manager.getrawdata()
-        output:
-            trimmed=fastp_outputs,
-            html="{sample}/fastp/fastp_{sample}.html",
-            json="{sample}/fastp/fastp_{sample}.json", # must be named fastp
-        log:
-            "logs/fastp/{sample}.log"
-        params:
-            options=options_fastp,
-            adapters=config["fastp"]["adapters"]
-        threads:
-            config["fastp"].get("threads", 4)
-        resources:
-            **config['fastp']['resources']
-        container:
-            config['apptainers']['fastp']
-        wrapper:
-            f"{manager.wrappers}/wrappers/fastp"
+    if manager.paired:
+        rule fastp:
+            input:
+                fastq=manager.getrawdata()
+            output:
+                r1="{sample}/fastp/{sample}_R1_.fastq.gz",
+                r2="{sample}/fastp/{sample}_R2_.fastq.gz",
+                html="{sample}/fastp/fastp_{sample}.html",
+                json="{sample}/fastp/fastp_{sample}.json",
+            log:
+                "logs/fastp/{sample}.log"
+            params:
+                options=options_fastp,
+                adapters=config["fastp"]["adapters"]
+            threads:
+                config["fastp"].get("threads", 4)
+            resources:
+                **config['fastp']['resources']
+            container:
+                config['apptainers']['fastp']
+            shell:
+                manager.get_shell("fastp/run", "v1")
+    else:
+        rule fastp:
+            input:
+                fastq=manager.getrawdata()
+            output:
+                r1="{sample}/fastp/{sample}_R1_.fastq.gz",
+                html="{sample}/fastp/fastp_{sample}.html",
+                json="{sample}/fastp/fastp_{sample}.json",
+            log:
+                "logs/fastp/{sample}.log"
+            params:
+                options=options_fastp,
+                adapters=config["fastp"]["adapters"]
+            threads:
+                config["fastp"].get("threads", 4)
+            resources:
+                **config['fastp']['resources']
+            container:
+                config['apptainers']['fastp']
+            shell:
+                manager.get_shell("fastp/run", "v1")
 
 
 if config['fastqc']['do']:
@@ -170,8 +199,8 @@ if config['fastqc']['do']:
             **config["fastqc"]['resources']
         container:
             config['apptainers']['fastqc']
-        wrapper:
-            f"{manager.wrappers}/wrappers/fastqc"
+        shell:
+            manager.get_shell("fastqc/run", "v1")
     expected_output.extend(expand("{sample}/fastqc/fastqc.done", sample=manager.samples))
 
 
@@ -194,8 +223,8 @@ rule bwa_index:
     threads: 2
     resources:
         **config["bwa_index"]["resources"],
-    wrapper:
-        f"{manager.wrappers}/wrappers/bwa/build"
+    shell:
+        manager.get_shell("bwa/build", "v1")
 
 
 # ========================================================= BWA
@@ -229,8 +258,8 @@ if not config["input_pattern"].endswith("bam"):
             threads: 2
             resources:
                 **config["bwa"]["resources"]
-            wrapper:
-                f"{manager.wrappers}/wrappers/bwa/align"
+            shell:
+                manager.get_shell("bwa/align", "v1")
 
     elif aligner == "bwa_split":
 
@@ -276,8 +305,8 @@ if not config["input_pattern"].endswith("bam"):
                 **config["bwa"]["resources"],
             container:
                 config["apptainers"]["bwa"]
-            wrapper:
-                f"{manager.wrappers}/wrappers/bwa/align"
+            shell:
+                manager.get_shell("bwa/align", "v1")
 
         def aggregate_bwa(wildcards):
             checkpoint_output = checkpoints.split_fasta.get(**wildcards).output[0]
@@ -334,8 +363,8 @@ if not config["input_pattern"].endswith("bam"):
                 config['apptainers']['minimap2']
             resources:
                 **config["minimap2"]["resources"]
-            wrapper:
-                f"{manager.wrappers}/wrappers/minimap2"
+            shell:
+                manager.get_shell("minimap2/align", "v1")
     else:
         raise ValueError(f"aligner_choice must be set to bwa or minimap2. You set {aligner}")
 
@@ -344,7 +373,7 @@ if not config["input_pattern"].endswith("bam"):
 #
 rule add_read_group:
     input:
-        get_input_data() if config["input_pattern"].endswith(".bam") 
+        bam=get_input_data() if config["input_pattern"].endswith(".bam")
             else "{sample}/" + aligner + "/{sample}.sorted.bam"
     output:
         bam="{sample}/add_read_group/{sample}.sorted.bam"
@@ -352,11 +381,15 @@ rule add_read_group:
         "{sample}/add_read_group/{sample}.log"
     params:
         options=config["add_read_group"]["options"],
-        SM="{sample}"
+        SM="{sample}",
+        PL=config["add_read_group"].get("PL", "Illumina"),
+        LB=config["add_read_group"].get("LB", "unknown"),
+        PU=config["add_read_group"].get("PU", "unknown"),
+        ID=config["add_read_group"].get("ID", "1"),
     container:
         config['apptainers']['sequana_tools']
-    wrapper:
-        f"{manager.wrappers}/wrappers/add_read_group"
+    shell:
+        manager.get_shell("add_read_group/run", "v1")
 
 
 
@@ -365,7 +398,7 @@ if config["sambamba_markdup"]["do"]:
 
     rule sambamba_markdup:
         input:
-            "{sample}/add_read_group/{sample}.sorted.bam"
+            bam="{sample}/add_read_group/{sample}.sorted.bam"
         output:
             bam="{sample}/sambamba_markdup/{sample}.sorted.bam"
         log: "{sample}/sambamba_markdup.log",
@@ -377,8 +410,8 @@ if config["sambamba_markdup"]["do"]:
             config['apptainers']['sequana_tools']
         resources:
             **config["sambamba_markdup"]["resources"]
-        wrapper:
-            f"{manager.wrappers}/wrappers/sambamba_markdup"
+        shell:
+            manager.get_shell("sambamba_markdup/run", "v1")
 
     __sambamba_filter__input = rules.sambamba_markdup.output.bam
     __freebayes__input       = rules.sambamba_markdup.output.bam
@@ -393,9 +426,9 @@ if config["sambamba_filter"]["do"]:
 
     rule sambamba_filter:
         input:
-            __sambamba_filter__input
+            bam=__sambamba_filter__input
         output:
-            "{sample}/sambamba_filter/{sample}.filter.sorted.bam"
+            bam="{sample}/sambamba_filter/{sample}.filter.sorted.bam"
         log:
             "{sample}/sambamba_filter/{sample}_sambamba_filter.log",
         params:
@@ -405,8 +438,8 @@ if config["sambamba_filter"]["do"]:
             config['apptainers']['sequana_tools']
         resources:
             **config["sambamba_filter"]["resources"]
-        wrapper:
-            f"{manager.wrappers}/wrappers/sambamba_filter"
+        shell:
+            manager.get_shell("sambamba_filter/run", "v1")
 
     __freebayes__input = rules.sambamba_filter.output[0]
     __samtools_depth__input = [
@@ -449,7 +482,7 @@ if config["sequana_coverage"]["do"]:
 
     rule samtools_depth:
         input:
-            __samtools_depth__input
+            bam=__samtools_depth__input
         output:
             "{sample}/samtools_depth/{sample}.bed"
         log:
@@ -461,8 +494,8 @@ if config["sequana_coverage"]["do"]:
             **config["samtools_depth"]["resources"]
         container:
             config['apptainers']['sequana_tools']
-        wrapper:
-            f"{manager.wrappers}/wrappers/samtools_depth"
+        shell:
+            manager.get_shell("samtools_depth/run", "v1")
 
 
     rule double_bed:
@@ -516,8 +549,8 @@ if config["sequana_coverage"]["do"]:
             **config["sequana_coverage"]["resources"]
         container:
             config["apptainers"]["sequana_coverage"]
-        wrapper:
-            f"{manager.wrappers}/wrappers/sequana_coverage"
+        shell:
+            manager.get_shell("sequana_coverage/run", "v1")
 
     expected_output += expand("{sample}/sequana_coverage/sequana_coverage.html",
              sample=manager.samples)
@@ -647,8 +680,11 @@ if config["snpeff"]["do"]:
             **config["snpeff"]["resources"]
         container:
             config['apptainers']['sequana_tools']
-        wrapper:
-            f"{manager.wrappers}/wrappers/snpeff"
+        run:
+            from sequana import SnpEff
+            options = f"{params.options} -csvStats {output.csv}"
+            mydata = SnpEff(str(input.ann), log=str(log[0]))
+            mydata.launch_snpeff(str(input.vcf), str(output.vcf), html_output=str(output.html), options=options)
 
 
     __freebayes_vcf_filter__input = "{sample}/snpeff/{sample}.ann.vcf"
@@ -708,7 +744,7 @@ if config["joint_freebayes"]["do"]:
             bam=expand(__freebayes__input, sample=manager.samples),
             ref=new_reference
         output:
-            "joint_calling/joint_calling.raw.vcf"
+            vcf="joint_calling/joint_calling.raw.vcf"
         log:
             "joint_calling/joint_calling.log"
         params:
@@ -718,8 +754,8 @@ if config["joint_freebayes"]["do"]:
             **config["joint_freebayes"]["resources"]
         container:
             config['apptainers']['freebayes']
-        wrapper:
-            f"{manager.wrappers}/wrappers/freebayes"
+        shell:
+            manager.get_shell("freebayes/run", "v1")
 
     # ============================================= snpeff
     if config["snpeff"]["do"]:
@@ -738,8 +774,11 @@ if config["joint_freebayes"]["do"]:
                 options=config["snpeff"]["options"]
             container:
                 config['apptainers']['sequana_tools']
-            wrapper:
-                f"{manager.wrappers}/wrappers/snpeff"
+            run:
+                from sequana import SnpEff
+                options = f"{params.options} -csvStats {output.csv}"
+                mydata = SnpEff(str(input.ann), log=str(log[0]))
+                mydata.launch_snpeff(str(input.vcf), str(output.vcf), html_output=str(output.html), options=options)
 
         expected_output+=["joint_calling/joint_calling.ann.vcf"]
         expected_output+=["joint_calling/snpeff.html"]
@@ -768,8 +807,13 @@ if config["joint_freebayes"]["do"]:
             config['apptainers']['sequana_tools']
         resources:
             **config["freebayes"]["resources"]
-        wrapper:
-            f"{manager.wrappers}/wrappers/freebayes_vcf_filter"
+        shell:
+            """
+            sequana html-report {input} \
+                --output-vcf-file {output.vcf} \
+                --output-csv-file {output.csv} \
+                --output-directory {params.report_dir}
+            """
     expected_output+=["joint_calling/variant_calling.html"]
 
     rule vcf2bcf_joint:
@@ -838,8 +882,8 @@ rule multiqc:
         **config["multiqc"]["resources"],
     container:
         config["apptainers"]["multiqc"]
-    wrapper:
-       f"{manager.wrappers}/wrappers/multiqc"
+    shell:
+        manager.get_shell("multiqc/run", "v1")
 
 
 # ======================================================================================== rulegraph
@@ -857,8 +901,8 @@ rule rulegraph:
     params:
         mapper = {"multiqc": "../multiqc/multiqc_report.html"},
         configname = "config.yaml"
-    wrapper:
-        f"{manager.wrappers}/wrappers/rulegraph"
+    run:
+        manager.get_run("rulegraph/run", "v1")(input, output, params)
 
 
 rule dot2svg:
@@ -869,7 +913,7 @@ rule dot2svg:
     container:
         config['apptainers']['graphviz']
     shell:
-        """dot -Tsvg {input} -o {output}"""
+        manager.get_shell("graphviz/dot2svg", "v1")
 
 
 localrules: rulegraph, multiqc, stats

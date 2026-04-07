@@ -125,28 +125,28 @@ def main(**options):
             #cfg["sequana_coverage"]["genbank_file"] = ""
 
     def fill_do_coverage():
-        cfg["sequana_coverage"]["do"] = options.do_coverage
+        cfg.sequana_coverage.do = options.do_coverage
 
     def fill_circular_coverage():
-        cfg["sequana_coverage"]["circular"] = options.circular
+        cfg.sequana_coverage.circular = options.circular
 
     def fill_do_joint_freebayes():
-        cfg["joint_freebayes"]["do"] = options.do_joint_calling
+        cfg.joint_freebayes.do = options.do_joint_calling
 
     def fill_ploidy_freebayes():
-        cfg["freebayes"]["ploidy"] = options.freebayes_ploidy
+        cfg.freebayes.ploidy = options.freebayes_ploidy
 
     def fill_reference_file():
         # required argument
         cfg.general.reference_file = os.path.abspath(options.reference)
 
     # first if option --long-read is used (overwritten by other options)
-    if options["nanopore"]:
+    if options.nanopore:
         cfg.general.aligner_choice = "minimap2"
         cfg.minimap2.options = "-x map-ont"
         cfg.input_readtag = ""
         cfg.fastqc.do = False
-    elif options["pacbio"]:
+    elif options.pacbio:
         cfg.general.aligner_choice = "minimap2"
         cfg.minimap2.options = "-x map-pb"
         cfg.input_readtag = ""
@@ -154,7 +154,7 @@ def main(**options):
     else:
         cfg.general.aligner_choice = options.aligner
 
-    if options["from_project"]:
+    if options.from_project:
         raise NotImplementedError
     else:
         fill_annotation_file()
@@ -172,9 +172,9 @@ def main(**options):
 
     # seems to be a hardcoded values in bwa according to the documentation
     if N >= 2000000000:
-        cfg["bwa"]["index_algorithm"] = "bwtsw"
+        cfg.bwa.index_algorithm = "bwtsw"
     else:
-        cfg["bwa"]["index_algorithm"] = "is"
+        cfg.bwa.index_algorithm = "is"
 
     # finalise the command and save it; copy the snakemake. update the config
     # file and save it.

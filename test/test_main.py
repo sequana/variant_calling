@@ -57,7 +57,7 @@ def test_check_output_ref_annot():
         # create the wokring directory and script
         subprocess.call(cmd.split())
 
-        subprocess.call("sh variant_calling.sh".split(), cwd=wk)
+        subprocess.call("bash variant_calling.sh".split(), cwd=wk)
 
         from sequana.variants import VariantFile
 
@@ -100,7 +100,7 @@ def test_check_output_no_annotation():
         # create the wokring directory and script
         subprocess.call(cmd.split())
 
-        subprocess.call("sh variant_calling.sh".split(), cwd=wk)
+        subprocess.call("bash variant_calling.sh".split(), cwd=wk)
 
         from sequana.variants import VariantFile
         vcf = VariantFile(wk + "/data/freebayes/data.raw.vcf")
