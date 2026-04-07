@@ -89,7 +89,7 @@ if config["snpeff"]["do"]:
         resources:
             **config["snpeff"]["resources"]
         container:
-            config['apptainers']['sequana_tools']
+            config['apptainers']['snpeff']
         run:
             from sequana import SnpEff
             ann = str(input[1])
