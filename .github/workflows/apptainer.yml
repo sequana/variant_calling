@@ -95,3 +95,15 @@ jobs:
           --reference-file test/data/JB409847.fasta
 
         cd variant_calling && bash variant_calling.sh
+
+    # Print snpEff log on failure to see actual error
+    - name: Print snpEff log on failure
+      if: failure()
+      run: |
+        if [ -f "variant_calling/common_logs/snpeff_add_locus_in_fasta.log" ]; then
+          echo "=== snpeff_add_locus_in_fasta.log ==="
+          cat variant_calling/common_logs/snpeff_add_locus_in_fasta.log
+        else
+          echo "Log file not found, listing available logs:"
+          find variant_calling -name "*.log" -type f 2>/dev/null | head -20
+        fi
