@@ -189,6 +189,7 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.5.0     * use new sequana-wrappers shells
 1.4.0     * handles long reads data. Use sequana html_report to create the VCF
             html reports instead of wrapper. More dynamic. Updated some 
             containers, in particular for sequana_coverage.
