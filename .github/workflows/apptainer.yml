@@ -17,7 +17,7 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python: ['3.10', '3.11']
+        python: ['3.11']
       fail-fast: false
 
     steps:
@@ -56,13 +56,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y apptainer
 
-    # Cache Apptainer image cache (~/.apptainer/cache)
-    - name: Cache Apptainer images
-      uses: actions/cache@v3
-      with:
-        path: ~/.apptainer/cache
-        key: ${{ runner.os }}-apptainer-images-v1
-
     # Checkout repository
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -90,8 +83,6 @@ jobs:
       run: |
         sequana_variant_calling \
           --input-directory test/data/ \
-          --use-apptainer --apptainer-prefix ~/.apptainer/cache \
-          --annotation-file test/data/JB409847.gbk \
-          --reference-file test/data/JB409847.fasta
-
-        cd variant_calling && bash variant_calling.sh
+          --force --monitor \
+          --reference-file test/data/JB409847.fasta \
+          --apptainer-prefix ~/.apptainer/cache

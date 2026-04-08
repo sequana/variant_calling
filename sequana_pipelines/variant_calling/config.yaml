@@ -41,6 +41,7 @@ apptainers:
     freebayes: https://zenodo.org/record/14930911/files/freebayes_1.3.9.img
     fastqc: https://zenodo.org/record/7015004/files/fastqc_0.11.9-py3.img
     fastp: https://zenodo.org/record/17097941/files/fastp_1.0.1.img
+    snpeff:  https://zenodo.org/record/17098202/files/snpeff_5.2.0.img
 
 # you may add ID, PF, SM, PU, LB read tags
 #
