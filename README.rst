@@ -47,7 +47,7 @@ Usage
 
 ::
 
-    sequana_variant_calling --input-directory DATAPATH --reference-file measles.fa 
+    sequana_variant_calling --input-directory DATAPATH --reference-file measles.fa
 
 This creates a directory **variant_calling**. You just need to move into the directory and execute the script::
 
@@ -85,7 +85,7 @@ Requirements
 ~~~~~~~~~~~~
 
 If you rely on singularity/apptainer, no extra dependencies are required (expect python and
-https://damona.readthedocs.io). If you cannot use apptainer, you will need to install some software: 
+https://damona.readthedocs.io). If you cannot use apptainer, you will need to install some software:
 
 - bwa
 - freebayes
@@ -155,8 +155,8 @@ Initiate the pipeline::
 
     sequana_variant_calling --input-directory . --reference-file ecoli.fa --aligner-choice bwa_split \
         --do-coverage --annotation-file ecoli.gff  \
-        --use-apptainer --apptainer-prefix ~/.sequana/apptainers \ 
-        --input-readtag "_[12]." 
+        --use-apptainer --apptainer-prefix ~/.sequana/apptainers \
+        --input-readtag "_[12]."
 
 Explication:
 
@@ -189,17 +189,22 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.6.0     * Fix freebayes_vcf_filter and joint_freebayes_vcf_filter rules that
+            ignored their config.yaml settings: the filter parameters
+            (frequency, freebayes_score, min_depth, etc.) were never passed to
+            the sequana html-report command, so CLI defaults were always used.
+            joint_freebayes_vcf_filter also read the wrong config section.
 1.5.0     * use new sequana-wrappers shells
 1.4.0     * handles long reads data. Use sequana html_report to create the VCF
-            html reports instead of wrapper. More dynamic. Updated some 
+            html reports instead of wrapper. More dynamic. Updated some
             containers, in particular for sequana_coverage.
           * Fixed regression in bwa mapping
-          * Fixed ordering of contigs on genomecov that was not sorted in the 
+          * Fixed ordering of contigs on genomecov that was not sorted in the
             same way as samtools in some cases.
-          * use new sequana-wrappers.shells (instead of wrappers) 
-1.3.0     * Updated version to use latest damona containers and latest 
+          * use new sequana-wrappers.shells (instead of wrappers)
+1.3.0     * Updated version to use latest damona containers and latest
             sequana version 0.19.1. added plot in HTML report with distribution
-            of variants. added tutorial. added bwa_split and freebaye split to 
+            of variants. added tutorial. added bwa_split and freebaye split to
             process ultra deep sequencing.
 1.2.0     * -Xmx8g option previously added is not robust. Does not work with
             snpEff 5.1 for instance.
