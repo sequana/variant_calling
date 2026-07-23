@@ -711,6 +711,13 @@ rule freebayes_vcf_filter:
         """
         # requires sequana 0.19.4
         sequana html-report {input} \
+            --freebayes-score {params.filter_dict[freebayes_score]} \
+            --frequency {params.filter_dict[frequency]} \
+            --min-depth {params.filter_dict[min_depth]} \
+            --forward-depth {params.filter_dict[forward_depth]} \
+            --reverse-depth {params.filter_dict[reverse_depth]} \
+            --strand-ratio {params.filter_dict[strand_ratio]} \
+            --keep-polymorphic {params.filter_dict[keep_polymorphic]} \
             --output-vcf-file {output.vcf} \
             --output-csv-file {output.csv} \
             --output-directory {wildcards.sample}
@@ -801,7 +808,7 @@ if config["joint_freebayes"]["do"]:
             csv="joint_calling/joint_calling.filter.csv",
             html="joint_calling/variant_calling.html"
         params:
-            filter_dict=config["freebayes_vcf_filter"],
+            filter_dict=config["joint_freebayes_vcf_filter"],
             report_dir="joint_calling"
         container:
             config['apptainers']['sequana_tools']
@@ -810,6 +817,9 @@ if config["joint_freebayes"]["do"]:
         shell:
             """
             sequana html-report {input} \
+                --freebayes-score {params.filter_dict[freebayes_score]} \
+                --frequency {params.filter_dict[frequency]} \
+                --min-depth {params.filter_dict[min_depth]} \
                 --output-vcf-file {output.vcf} \
                 --output-csv-file {output.csv} \
                 --output-directory {params.report_dir}
