@@ -36,13 +36,16 @@ jobs:
           environment-file: environment.yml
           create-args: >-
             python=${{ matrix.python }}
-          cache-environment: true
+          # environment caching is disabled on purpose: restored envs kept the
+          # package metadata but lost files on disk, so bcftools was reported as
+          # installed while libgsl.so.25 was missing at runtime
+          cache-environment: false
           cache-downloads: true
 
-    - name: install bcftools
+    - name: check bcftools
+      shell: bash -l {0}
       run: |
-        micromamba install -y -n sequana_variant_calling -c conda-forge -c bioconda bcftools
-        micromamba run -n sequana_variant_calling bcftools --version
+        bcftools --version
 
     - name: install package itself
       shell: bash -l {0}
