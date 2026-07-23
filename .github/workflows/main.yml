@@ -39,6 +39,11 @@ jobs:
           cache-environment: true
           cache-downloads: true
 
+    - name: install bcftools
+      run: |
+        micromamba install -y -n sequana_variant_calling -c conda-forge -c bioconda bcftools
+        micromamba run -n sequana_variant_calling bcftools --version
+
     - name: install package itself
       shell: bash -l {0}
       run: |
